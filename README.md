@@ -8,6 +8,10 @@
 
 上游仓库在该提交中**未包含 LICENSE 文件**，许可状态不明确。在获得原作者明确授权前，请勿将本代码视为开源许可代码进行再分发或商用。
 
+## CI 说明
+
+上游的 GitHub Actions CI 配置（`.github/workflows/ci.yml`）未包含在本仓库中，后续可按需重新添加。
+
 ## 快速开始
 
 需要 Python 3.11+ 与 Node.js 18+。
@@ -42,5 +46,5 @@ cd frontend && npm run dev
 
 ## 版本历史
 
-- **0.1.0** — 上游基线：IdleFramework `a0447d5` 原始代码，新增中文 README 与 `.gitignore`。
+- **0.1.0** — 上游基线：IdleFramework `a0447d5` 原始代码，新增中文 README 与 `.gitignore`；移除测试产物与 CI 配置（`.github/workflows/`）。
 - **0.1.1**（计划中）— 中文输入界面、引擎修复、多货币支持。
