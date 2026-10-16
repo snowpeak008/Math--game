@@ -23,7 +23,9 @@
    "gold": 0.0,
    "honor": 0.0
   },
-  "binding_currency_cost": "gold",
+  "binding_currency": "gold",
+  "binding_kind": "cost",
+  "binding_cost_currency": "gold",
   "effective_cost_gold": 2000.0,
   "delta_gold_per_s": 0.0,
   "cost_over_delta_s": null,
@@ -55,7 +57,9 @@
    "gold": 0.0,
    "honor": 0.0
   },
-  "binding_currency_cost": "gold",
+  "binding_currency": "gold",
+  "binding_kind": "cost",
+  "binding_cost_currency": "gold",
   "effective_cost_gold": 50000.0,
   "delta_gold_per_s": 0.0,
   "cost_over_delta_s": null,
@@ -87,7 +91,9 @@
    "gold": 104.0,
    "honor": 1.5
   },
-  "binding_currency_cost": "gold",
+  "binding_currency": "honor",
+  "binding_kind": "requires",
+  "binding_cost_currency": "gold",
   "effective_cost_gold": 2000.0,
   "delta_gold_per_s": 80.0,
   "cost_over_delta_s": 25.0,
@@ -122,7 +128,9 @@
    "gold": 104.0,
    "honor": 1.5
   },
-  "binding_currency_cost": "gold",
+  "binding_currency": "honor",
+  "binding_kind": "requires",
+  "binding_cost_currency": "gold",
   "effective_cost_gold": 50000.0,
   "delta_gold_per_s": 104.0,
   "cost_over_delta_s": 480.8,

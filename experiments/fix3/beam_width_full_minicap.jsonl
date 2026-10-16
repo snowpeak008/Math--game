@@ -1,0 +1,8 @@
+{"game": "minicap", "width": 1, "branch_steps": 1000, "final_production": 27675496.8, "search_decisions": 0, "wall_s": 4.2}
+{"game": "minicap", "width": 2, "branch_steps": 1000, "final_production": 28254517.2, "search_decisions": 200, "wall_s": 16.7}
+{"game": "minicap", "width": 3, "branch_steps": 1000, "final_production": 30511857.6, "search_decisions": 200, "wall_s": 36.4}
+{"game": "minicap", "width": 4, "branch_steps": 1000, "final_production": 30511857.6, "search_decisions": 200, "wall_s": 62.5}
+{"game": "minicap", "width": 5, "branch_steps": 1000, "final_production": 30511857.6, "search_decisions": 200, "wall_s": 89.9}
+{"game": "minicap", "width": 6, "branch_steps": 1000, "final_production": 31011157.8, "search_decisions": 200, "wall_s": 117.9}
+{"game": "minicap", "width": 7, "branch_steps": 1000, "final_production": 31011157.8, "search_decisions": 200, "wall_s": 145.3}
+{"game": "minicap", "width": 8, "branch_steps": 1000, "final_production": 31011157.8, "search_decisions": 200, "wall_s": 173.4}

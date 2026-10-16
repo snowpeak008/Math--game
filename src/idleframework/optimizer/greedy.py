@@ -228,6 +228,27 @@ class GreedyOptimizer:
             return wait + cost / net_gain
         return wait + cost / delta_prod + self._oc_term(wait, rate, delta_prod)
 
+    def stock_interest_rate(self) -> float:
+        """k = dI/dx: primary income gained per unit of held primary stock
+        (central difference at the current balance; 0 without stock link)."""
+        eng = self.engine
+        if not eng._stock.enabled:
+            return 0.0
+        p = eng._get_primary_resource_id()
+        b = eng.get_balance(p)
+        h = max(1e-6, 1e-6 * b)
+        lo = eng._stock.net_rates_with({p: max(0.0, b - h)}).get(p, 0.0)
+        hi = eng._stock.net_rates_with({p: b + h}).get(p, 0.0)
+        return (hi - lo) / (b + h - max(0.0, b - h))
+
+    def beats_interest(self, cost: float, delta_income: float) -> bool:
+        """Comparison rule: buy iff delta_income / cost > k (k = dI/dx).
+
+        Spending c forgoes k*c income per second; the purchase adds
+        delta_income. Reference rule for the penalty form (not adopted, see
+        PROGRESS_fix3 2a/F)."""
+        return cost > 0 and delta_income / cost > self.stock_interest_rate()
+
     def _stock_income_loss(self, cost: float, balance: float) -> float:
         """Primary income lost by spending ``cost`` (fix3/F, oc_mode "derivative").
 
@@ -385,6 +406,14 @@ class GreedyOptimizer:
         while self.engine.current_time < until - 1e-12:
             rates = self.engine.compute_production_rates()
             nxt = self.engine._next_autobuyer_time()
+            ft = self.engine._next_farm_event()
+            if ft is not None and ft < until - 1e-12 and (nxt is None or ft < nxt[1]):
+                dt = max(0.0, ft - self.engine.current_time)
+                self.engine._accumulate(rates, dt)
+                self.engine._time = ft
+                self.engine.state.elapsed_time = ft
+                self.engine._snap_farm_thresholds()
+                continue
             # Autobuyers due exactly at ``until`` fire before control returns,
             # so chunked run() calls behave the same as one long call.
             if nxt is not None and nxt[1] <= until + 1e-12:
@@ -589,7 +618,11 @@ class GreedyOptimizer:
             "delta_production": delta,
             "multi": True,
             "wait": float("inf") if wait is None else wait,
-            "binding_currency": bind,
+            # v0.1.6: binding = constraint with the longest wait over costs
+            # and requires; binding_cost_currency = cost-list-only (old field).
+            "binding_currency": (eng.binding_constraint(node.id, price, net) or {}).get("currency", bind),
+            "binding_kind": (eng.binding_constraint(node.id, price, net) or {}).get("kind", "cost"),
+            "binding_cost_currency": bind,
             "price": price,
             "requires": eng._requirements(node.id),
         }

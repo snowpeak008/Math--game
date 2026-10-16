@@ -32,6 +32,53 @@ if TYPE_CHECKING:
     from idleframework.engine.segments import PiecewiseEngine
 
 AFFINE_RTOL = 1e-9
+# Largest k*t for which e^{kt} is formed in float; beyond it only log space.
+_KT_FLOAT_MAX = 700.0
+
+
+class StockOverflowError(OverflowError):
+    """A stock-linked balance left the float range (v0.1.6).
+
+    Raised instead of silently returning inf. ``ln_value`` is ln x(t) from the
+    log-space closed form (None when unavailable, e.g. ODE case);
+    ``as_bigfloat()`` gives the value as a BigFloat.
+    """
+
+    def __init__(self, resource: str, t: float, ln_value: float | None):
+        self.resource, self.t, self.ln_value = resource, t, ln_value
+        lg = f"ln={ln_value:.6g} (~1e{ln_value / math.log(10):.6g})" if ln_value is not None else "ln unknown"
+        super().__init__(
+            f"stock-linked balance {resource!r} exceeds float range after {t:.6g}s ({lg}); "
+            "unbounded exponential growth - add a capacity or a sublinear formula"
+        )
+
+    def as_bigfloat(self):
+        return ln_to_bigfloat(self.ln_value) if self.ln_value is not None else None
+
+
+def ln_to_bigfloat(ln_value: float):
+    from idleframework.bigfloat import BigFloat
+
+    l10 = ln_value / math.log(10)
+    e = math.floor(l10)
+    return BigFloat.from_components(10 ** (l10 - e), int(e))
+
+
+def affine_log_x(x0: float, a: float, k: float, t: float) -> float:
+    """ln x(t) for dx/dt = a + k x, x(0) = x0 > 0, without forming e^{kt}.
+
+    x(t) = (x0 + a/k) e^{kt} - a/k  ->  ln x = kt + ln(c) + log1p(-(a/k) e^{-kt} / c),
+    c = x0 + a/k > 0. Small kt falls back to the float closed form.
+    """
+    kt = k * t
+    if k > 0 and kt > 30.0:
+        c = x0 + a / k
+        if c > 0:
+            return kt + math.log(c) + math.log1p(-(a / k) * math.exp(-kt) / c)
+    x = x0 + (a + k * x0) * _e1(k, t)
+    if x <= 0:
+        return -math.inf
+    return math.log(x)
 
 
 def stock_resources(game) -> set[str]:
@@ -103,6 +150,10 @@ class _Plan:
         if cap is not None and x0 < cap:
             t_cap = self._affine_reach_s(cap)
         t1 = t if t_cap is None else min(t, t_cap)
+        if k * t1 > _KT_FLOAT_MAX:
+            ln = affine_log_x(x0, a, k, t1) if x0 > 0 else None
+            if ln is None or ln > 709.0:
+                raise StockOverflowError(s, t1, ln)
         xs = x0 + (a + k * x0) * _e1(k, t1)
         ints = x0 * t1 + (a + k * x0) * _e2(k, t1)  # integral of x_s on [0,t1]
         if cap is not None and xs > cap:
@@ -135,6 +186,16 @@ class _Plan:
         return math.log1p(arg) / k
 
     # -- public -------------------------------------------------------------
+    def log_state_at(self, t: float) -> float | None:
+        """ln of the stock balance at t (affine case, no capacity), any size."""
+        if self.affine is None:
+            return None
+        s, coef = self.affine
+        a, k = coef[s]
+        if self.x0[s] <= 0 or s in self.cap:
+            return None
+        return affine_log_x(self.x0[s], a, k, t)
+
     def state_at(self, t: float) -> dict[str, float]:
         if t <= 0:
             return dict(self.x0)
@@ -144,7 +205,11 @@ class _Plan:
             out = self._numeric(t, None, None)[1]
         for r, v in out.items():
             if not math.isfinite(v):
-                out[r] = math.inf if v > 0 or math.isnan(v) else 0.0
+                ln = None
+                if self.affine is not None and r == self.affine[0] and self.x0[r] > 0:
+                    a, k = self.affine[1][r]
+                    ln = affine_log_x(self.x0[r], a, k, t)
+                raise StockOverflowError(r, t, ln)
             if out[r] < 0:
                 out[r] = 0.0
             c = self.cap.get(r)

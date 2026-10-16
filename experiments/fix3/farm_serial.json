@@ -1,0 +1,83 @@
+[
+ {
+  "variant": "no_farm",
+  "opt": "greedy",
+  "final_production": 451620.0,
+  "trainer": 0,
+  "forge_t": null,
+  "wall_s": 0.1,
+  "gain_vs_no_farm": 1.0
+ },
+ {
+  "variant": "no_farm",
+  "opt": "beam(w3)",
+  "final_production": 451620.0,
+  "trainer": 0,
+  "forge_t": null,
+  "wall_s": 33.1,
+  "gain_vs_no_farm": 1.0
+ },
+ {
+  "variant": "no_farm",
+  "opt": "bnb(d4)",
+  "final_production": 129.0,
+  "trainer": 0,
+  "forge_t": null,
+  "wall_s": 0.3,
+  "gain_vs_no_farm": 1.0
+ },
+ {
+  "variant": "serial",
+  "opt": "greedy",
+  "final_production": 1520460.0,
+  "trainer": 45,
+  "forge_t": 608.8,
+  "wall_s": 0.3,
+  "gain_vs_no_farm": 3.367
+ },
+ {
+  "variant": "serial",
+  "opt": "beam(w3)",
+  "final_production": 1520460.0,
+  "trainer": 45,
+  "forge_t": 608.8,
+  "wall_s": 66.9,
+  "gain_vs_no_farm": 3.367
+ },
+ {
+  "variant": "serial",
+  "opt": "bnb(d4)",
+  "final_production": 129.0,
+  "trainer": 0,
+  "forge_t": null,
+  "wall_s": 0.6,
+  "gain_vs_no_farm": 1.0
+ },
+ {
+  "variant": "serial+stamina",
+  "opt": "greedy",
+  "final_production": 1520460.0,
+  "trainer": 50,
+  "forge_t": 630.5,
+  "wall_s": 0.2,
+  "gain_vs_no_farm": 3.367
+ },
+ {
+  "variant": "serial+stamina",
+  "opt": "beam(w3)",
+  "final_production": 1520460.0,
+  "trainer": 50,
+  "forge_t": 630.5,
+  "wall_s": 67.4,
+  "gain_vs_no_farm": 3.367
+ },
+ {
+  "variant": "serial+stamina",
+  "opt": "bnb(d4)",
+  "final_production": 129.0,
+  "trainer": 0,
+  "forge_t": null,
+  "wall_s": 0.6,
+  "gain_vs_no_farm": 1.0
+ }
+]

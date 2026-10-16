@@ -9,6 +9,8 @@ segment.
 
 from __future__ import annotations
 
+from collections import OrderedDict
+
 import contextlib
 import math
 from collections import defaultdict
@@ -77,6 +79,26 @@ class BuffMultipliers:
 
     global_multiplier: float = 1.0
     per_generator: dict[str, float] = field(default_factory=dict)
+
+
+_GAME_MEMO: "OrderedDict[int, tuple[object, dict]]" = OrderedDict()
+_GAME_MEMO_MAX = 8
+
+
+def _game_memo(game) -> dict:
+    """Per-game memo store shared by every engine built on the same game
+    object (fix3 v0.1.6: greedy rollouts in beam build fresh engines). Holds a
+    strong ref to the game so its id cannot be reused while cached; LRU of 8."""
+    k = id(game)
+    hit = _GAME_MEMO.get(k)
+    if hit is None or hit[0] is not game:
+        hit = (game, {})
+        _GAME_MEMO[k] = hit
+        while len(_GAME_MEMO) > _GAME_MEMO_MAX:
+            _GAME_MEMO.popitem(last=False)
+    else:
+        _GAME_MEMO.move_to_end(k)
+    return hit[1]
 
 
 class PiecewiseEngine:
@@ -162,6 +184,9 @@ class PiecewiseEngine:
             for g in self._generators.values()
             if _re.search(rf"\bowned_{sanitize_var_name(g.id)}\b", _syn_text)
         }
+        from idleframework.model.nodes import FarmNode
+
+        self._farms = [n for n in game.nodes if isinstance(n, FarmNode)]
         self._rates_cacheable = not self._has_synergy and not any(
             e.edge_type == "state_modifier" for e in game.edges
         )
@@ -232,7 +257,37 @@ class PiecewiseEngine:
         for _gid, rate, targets in self._generator_rates():
             for t in targets:
                 rates[t] = rates.get(t, 0.0) + rate
+        for f in self._farms:
+            i = f.stage_for(self._balance(f.power_resource))
+            if i is not None:
+                r = f.stages[i].drop_per_clear * f.clears_per_second()
+                if r:
+                    rates[f.material] = rates.get(f.material, 0.0) + r
         return rates
+
+    def _next_farm_event(self) -> float | None:
+        """Absolute time power first reaches a not-yet-reached stage threshold
+        (the farmed stage, hence the drop rate, changes there)."""
+        if not self._farms:
+            return None
+        _, net = self._compute_net_rates()
+        best = None
+        for f in self._farms:
+            p = self._balance(f.power_resource)
+            for s in f.stages:
+                if s.required_power > p + 1e-9 * max(1.0, s.required_power):
+                    t = self._time_to_afford(f.power_resource, s.required_power, p, net.get(f.power_resource, 0.0))
+                    if t is not None and t > 0 and (best is None or t < best):
+                        best = t
+        return None if best is None else self._time + max(best, 1e-9)
+
+    def _snap_farm_thresholds(self) -> None:
+        """At a farm event, lift power to a threshold within float drift."""
+        for f in self._farms:
+            st = self._state.get(f.power_resource)
+            for s in f.stages:
+                if 0 < s.required_power - st.current_value <= 1e-7 * max(1.0, s.required_power):
+                    st.current_value = s.required_power
 
     def _generator_rates(self) -> list[tuple[str, float, list[str]]]:
         """Per-generator (id, rate/sec, production targets) for owned generators.
@@ -244,7 +299,7 @@ class PiecewiseEngine:
         if self._rates_cacheable:
             st = self._state
             key = tuple((v.owned, v.purchased, v.active) for v in st.node_states.values())
-            cache = self.__dict__.setdefault("_rates_cache", _SharedCache())
+            cache = self._memo("_rates_cache")
             hit = cache.get(key)
             if hit is None:
                 hit = tuple(self._generator_rates_uncached())
@@ -311,7 +366,7 @@ class PiecewiseEngine:
         """
         # Depends only on which upgrades are purchased -> memoise per engine.
         key = tuple(self._state.get(u).purchased for u in self._upgrades)
-        cache = self.__dict__.setdefault("_genmult_cache", _SharedCache())
+        cache = self._memo("_genmult_cache")
         hit = cache.get(key)
         if hit is None:
             hit = self._compute_generator_multipliers_uncached()
@@ -620,7 +675,7 @@ class PiecewiseEngine:
         """
         ns = self._state.get(node_id)
         key = (node_id, ns.owned, ns.purchased, count)
-        cache = self.__dict__.setdefault("_price_cache", _SharedCache())
+        cache = self._memo("_price_cache")
         hit = cache.get(key, False)
         if hit is not False:
             return list(hit) if hit is not None else None
@@ -695,6 +750,31 @@ class PiecewiseEngine:
             if bal < amt:
                 parts.append((cid, amt, bal, net_rates.get(cid, 0.0)))
         return parts
+
+    def binding_constraint(self, node_id: str, price=None, net_rates=None) -> dict | None:
+        """The constraint that sets the wait (v0.1.6): costs AND requires.
+
+        Returns {"currency", "kind": "cost"|"requires", "amount", "wait"} for
+        the unmet cost/threshold with the longest wait (inf if its currency
+        has no income), or None when everything is already met.
+        """
+        if price is None:
+            price = self._price(node_id) or []
+        if net_rates is None:
+            _, net_rates = self._compute_net_rates()
+        best = None
+        entries = [(c, a, "cost") for c, a in price] + [(c, a, "requires") for c, a in self._requirements(node_id)]
+        for cid, amt, kind in entries:
+            if amt <= 0 or not cid:
+                continue
+            bal = self._balance(cid)
+            if bal >= amt:
+                continue
+            t = self._time_to_afford(cid, amt, bal, net_rates.get(cid, 0.0))
+            t = float("inf") if t is None else t
+            if best is None or t > best["wait"]:
+                best = {"currency": cid, "kind": kind, "amount": amt, "wait": t}
+        return best
 
     def _time_until_affordable(self, node_id: str, price, net_rates) -> float | None:
         """max over currencies (costs and requirements) of time-to-afford."""
@@ -867,7 +947,25 @@ class PiecewiseEngine:
                 ns.purchased = False
         return after - before
 
+    def _memo(self, name: str) -> "_SharedCache":
+        c = self.__dict__.get(name)
+        if c is None:
+            c = _game_memo(self._game).setdefault(name, _SharedCache())
+            self.__dict__[name] = c
+        return c
+
     def _needed_currencies(self) -> set[str]:
+        # The set of currencies with a positive price/threshold depends only on
+        # which upgrades are still unpurchased -> memoise (shared cache).
+        key = tuple(self._state.get(u).purchased for u in self._upgrades)
+        cache = self._memo("_needed_cache")
+        hit = cache.get(key)
+        if hit is None:
+            hit = frozenset(self._needed_currencies_uncached())
+            cache[key] = hit
+        return set(hit)
+
+    def _needed_currencies_uncached(self) -> set[str]:
         out: set[str] = set()
         for n in self._game.nodes:
             if not isinstance(n, (Generator, Upgrade)):
@@ -877,6 +975,11 @@ class PiecewiseEngine:
             price = self._price(n.id) or []
             out.update(c for c, a in price if c and a > 0)
             out.update(c for c, _ in self._requirements(n.id))
+        # A farm's power resource is needed when its material is (power only
+        # gates the farmed stage, so no price mentions it).
+        for f in self._farms:
+            if f.material in out:
+                out.add(f.power_resource)
         return out
 
     def _valued_delta(self, node) -> float:
@@ -1000,7 +1103,7 @@ class PiecewiseEngine:
 
     def _get_currency_resource_id_for(self, node_id: str) -> str | None:
         # static per game -> memoised
-        cache = self.__dict__.setdefault("_currency_cache", _SharedCache())
+        cache = self._memo("_currency_cache")
         if node_id not in cache:
             cache[node_id] = self._get_currency_resource_id_uncached(node_id)
         return cache[node_id]
@@ -1316,6 +1419,24 @@ class PiecewiseEngine:
                 and ab_time < target_time - 1e-12
                 and (purchase_time is None or ab_time < purchase_time)
             )
+
+            farm_t = self._next_farm_event()
+            if (
+                farm_t is not None
+                and farm_t < target_time - 1e-12
+                and (purchase_time is None or farm_t < purchase_time)
+                and (ab_time is None or farm_t < ab_time)
+            ):
+                # Farmed stage changes: split the segment, re-plan.
+                dt = farm_t - self._time
+                seg = self._create_segment(rates, dt, ["farm_stage"])
+                new_segments.append(seg)
+                self._accumulate(rates, dt)
+                self._finish_segment(seg, gross_rates, dt)
+                self._time = farm_t
+                self._state.elapsed_time = farm_t
+                self._snap_farm_thresholds()
+                continue
 
             if ab_fires_first:
                 # Advance to autobuyer fire time

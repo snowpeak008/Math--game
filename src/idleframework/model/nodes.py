@@ -290,6 +290,45 @@ class SynergyNode(NodeBase):
 
 # ---------- Discriminated Union ----------
 
+class FarmStage(BaseModel):
+    required_power: float = Field(ge=0)
+    drop_per_clear: float = Field(ge=0)
+
+
+class FarmNode(NodeBase):
+    """Stage farming, serial model (v0.1.6).
+
+    One stage is farmed at a time: the highest stage whose ``required_power``
+    is <= the current balance of ``power_resource`` (stably clearable; a
+    combat-gate win rate replaces this test later). ``material`` gains
+    drop_per_clear * clears_per_second, clears_per_second =
+    1/clear_time, capped by stamina regen / stamina_per_clear when both are
+    set (steady state: the stamina stock buffer is not modelled).
+    """
+
+    type: Literal["farm"] = "farm"
+    name: str = ""
+    material: str
+    power_resource: str
+    stages: list[FarmStage]
+    clear_time: float = Field(default=1.0, gt=0)
+    stamina_per_clear: float | None = Field(default=None, gt=0)
+    stamina_regen: float | None = Field(default=None, ge=0)
+
+    def clears_per_second(self) -> float:
+        cps = 1.0 / self.clear_time
+        if self.stamina_per_clear and self.stamina_regen is not None:
+            cps = min(cps, self.stamina_regen / self.stamina_per_clear)
+        return cps
+
+    def stage_for(self, power: float) -> int | None:
+        best = None
+        for i, s in enumerate(self.stages):
+            if power >= s.required_power and (best is None or s.drop_per_clear >= self.stages[best].drop_per_clear):
+                best = i
+        return best
+
+
 NodeUnion = Annotated[
     Resource
     | Generator
@@ -311,6 +350,7 @@ NodeUnion = Annotated[
     | AutobuyerNode
     | DrainNode
     | BuffNode
-    | SynergyNode,
+    | SynergyNode
+    | FarmNode,
     Field(discriminator="type"),
 ]

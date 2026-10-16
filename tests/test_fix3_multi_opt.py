@@ -138,3 +138,28 @@ def test_bnb_sound_bound_equals_exhaustive():
     legacy = BranchAndBoundOptimizer(bx.start(bal), 4, bound="legacy").optimize(600, 40)
     assert sound.final_production == pytest.approx(ex["best"])
     assert legacy.final_production < ex["best"]  # documents the old invalid bound
+
+
+def test_binding_currency_includes_requires():
+    """v0.1.6: honor threshold (requires) binds h_shop_2, not the gold cost."""
+    g = _game()
+    opt = GreedyOptimizer(g)
+    st = opt.engine.state
+    st.get("mine").owned = 10
+    st.get("arena").owned = 3
+    c = {x["node_id"]: x for x in opt.get_candidates()}["h_shop_2"]
+    w = {cid: (need - have) / r for cid, need, have, r in
+         opt.engine._wait_parts("h_shop_2", c["price"], opt.engine._compute_net_rates()[1]) if r > 0}
+    assert c["binding_cost_currency"] == "gold"
+    assert c["binding_currency"] == max(w, key=w.get)
+    assert c["binding_kind"] == ("requires" if c["binding_currency"] == "honor" else "cost")
+
+
+def test_beam_rollout_never_below_greedy():
+    """v0.1.6: rollout-ranked beam returns >= greedy (root completion = greedy)."""
+    g = _game()
+    greedy = GreedyOptimizer(g).optimize(600, max_steps=200).final_production
+    w1 = BeamSearchOptimizer(PiecewiseEngine(g), 1).optimize(600, 200).final_production
+    w2 = BeamSearchOptimizer(PiecewiseEngine(g), 2, branch_steps=8).optimize(600, 200).final_production
+    assert w1 == pytest.approx(greedy)
+    assert w2 >= greedy - 1e-9

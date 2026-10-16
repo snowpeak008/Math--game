@@ -146,6 +146,8 @@ def _producers(game: GameDefinition) -> dict[str, list[str]]:
                 prod.setdefault(o.resource, []).append(n.id)
         elif isinstance(n, PrestigeLayer) and n.currency_id:
             prod.setdefault(n.currency_id, []).append(n.id)
+        elif getattr(n, "type", None) == "farm":
+            prod.setdefault(n.material, []).append(n.id)  # stage drops are a source
     return prod
 
 
@@ -156,6 +158,11 @@ def _node_inputs(game: GameDefinition, node_id: str) -> list[str]:
         return [c for c, a, _ in price_entries(game, n) if a > 0] + [c for c, a in requirement_entries(n) if a > 0]
     if isinstance(n, Converter):
         return [i.resource for i in n.inputs]
+    if getattr(n, "type", None) == "farm":
+        # needs enough power for the easiest stage (unless already there)
+        lowest = min((s.required_power for s in n.stages), default=0.0)
+        init = next((r.initial_value for r in game.nodes if r.id == n.power_resource), 0.0)
+        return [n.power_resource] if lowest > init else []
     return []  # prestige layers etc.: treated as always reachable
 
 
@@ -302,5 +309,52 @@ def check_dependency_cycles(game: GameDefinition) -> list[dict]:
     return out
 
 
+def check_unbounded_growth(game: GameDefinition) -> list[dict]:
+    """Stock-linked feedback that grows at least linearly in its own balance.
+
+    A SynergyNode whose formula uses balance_X and boosts a generator that
+    produces X, with no capacity on X, gives dx/dt >= k x: exponential (or
+    faster) growth that leaves the float range (v0.1.6 raises
+    StockOverflowError). Linear-or-faster is detected numerically:
+    f(1e12) / f(1e6) >= 1e5.
+    """
+    import re
+
+    from idleframework.dsl.compiler import compile_formula, evaluate_formula
+    from idleframework.engine.variables import sanitize_var_name
+    from idleframework.model.nodes import SynergyNode
+
+    out: list[dict] = []
+    res = {sanitize_var_name(n.id): n for n in game.nodes if isinstance(n, Resource)}
+    for syn in game.nodes:
+        if not isinstance(syn, SynergyNode):
+            continue
+        for m in re.finditer(r"balance_([A-Za-z0-9_]+)", syn.formula_expr):
+            r = res.get(m.group(1))
+            if r is None or getattr(r, "capacity", None) is not None:
+                continue
+            targets = [syn.target] if syn.target != "_all" else [n.id for n in game.nodes if isinstance(n, Generator)]
+            feeds = [t for t in targets for e in game.get_edges_from(t)
+                     if e.edge_type == "production_target" and e.target == r.id]
+            if not feeds:
+                continue
+            try:
+                c = compile_formula(syn.formula_expr)
+                v = lambda x: float(evaluate_formula(c, {f"balance_{m.group(1)}": x}))  # noqa: E731
+                lo, hi = v(1e6), v(1e12)
+            except Exception:  # noqa: BLE001 - formula needs other variables
+                continue
+            if lo > 0 and hi / lo >= 1e5:
+                out.append({
+                    "check": "unbounded_growth", "severity": "warning", "kind": "unbounded_exponential_growth",
+                    "resource_id": r.id, "nodes": [syn.id] + sorted(set(feeds)),
+                    "message": f"无界指数增长机制：{syn.id} 按 {r.id} 余额（至少线性）放大 {', '.join(sorted(set(feeds)))}，"
+                               f"而它们又产出 {r.id} 且 {r.id} 没有容量上限——余额会指数（或更快）增长并超出浮点范围；"
+                               "建议加容量上限或改用次线性公式（如 log）",
+                })
+    return out
+
+
 def run_static_checks(game: GameDefinition) -> list[dict]:
-    return check_capacity(game) + check_currency_inflow(game) + check_dependency_cycles(game)
+    return (check_capacity(game) + check_currency_inflow(game) + check_dependency_cycles(game)
+            + check_unbounded_growth(game))

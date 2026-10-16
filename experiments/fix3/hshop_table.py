@@ -24,7 +24,7 @@ def table(eng, label):
             "consumes": c["price"], "requires": c["requires"],
             "balances": {k: round(e.get_balance(k), 1) for k in ("gold", "honor")},
             "income": {k: round(net.get(k, 0.0), 2) for k in ("gold", "honor")},
-            "binding_currency_cost": c["binding_currency"], "effective_cost_gold": round(c["cost"], 1),
+            "binding_currency": c["binding_currency"], "binding_kind": c["binding_kind"], "binding_cost_currency": c["binding_cost_currency"], "effective_cost_gold": round(c["cost"], 1),
             "delta_gold_per_s": round(dgold, 2),
             "cost_over_delta_s": round(c["cost"] / dgold, 1) if dgold > 0 else None,
             "wait_s": round(c["wait"], 1),

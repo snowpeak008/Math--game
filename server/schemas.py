@@ -33,7 +33,7 @@ class AnalysisRequest(BaseModel):
     game_id: str
     simulation_time: float = Field(default=300.0, gt=0, le=86400)
     optimizer: Literal["greedy", "beam", "mcts", "bnb"] = "greedy"
-    beam_width: int = Field(default=100, ge=1)
+    beam_width: int = Field(default=5, ge=1, le=32)
     mcts_iterations: int = Field(default=1000, ge=1)
     mcts_seed: int | None = None
     bnb_depth: int = Field(default=20, ge=1)
@@ -73,7 +73,7 @@ class AutoOptimizeRequest(BaseModel):
     target_time: float = Field(default=300.0, gt=0, le=86400)
     optimizer: Literal["greedy", "beam", "mcts", "bnb"] = "greedy"
     max_steps: int = Field(default=500, ge=1, le=10000)
-    beam_width: int = Field(default=100, ge=1)
+    beam_width: int = Field(default=5, ge=1, le=32)
     mcts_iterations: int = Field(default=1000, ge=1)
     bnb_depth: int = Field(default=20, ge=1)
 

@@ -1,0 +1,8 @@
+{"game": "multi", "width": 1, "branch_steps": 1000, "final_production": 451620.0, "search_decisions": 0, "wall_s": 21.0}
+{"game": "multi", "width": 2, "branch_steps": 1000, "final_production": 458340.0, "search_decisions": 323, "wall_s": 83.3}
+{"game": "multi", "width": 3, "branch_steps": 1000, "final_production": 459000.0, "search_decisions": 325, "wall_s": 181.4}
+{"game": "multi", "width": 4, "branch_steps": 1000, "final_production": 459120.0, "search_decisions": 324, "wall_s": 314.5}
+{"game": "multi", "width": 5, "branch_steps": 1000, "final_production": 459120.0, "search_decisions": 324, "wall_s": 451.1}
+{"game": "multi", "width": 6, "branch_steps": 1000, "final_production": 456660.0, "search_decisions": 329, "wall_s": 610.1}
+{"game": "multi", "width": 7, "branch_steps": 1000, "final_production": 459120.0, "search_decisions": 324, "wall_s": 801.5}
+{"game": "multi", "width": 8, "branch_steps": 1000, "final_production": 459120.0, "search_decisions": 324, "wall_s": 977.3}

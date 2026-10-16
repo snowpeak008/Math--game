@@ -18,7 +18,7 @@ from idleframework.optimizer.greedy import GreedyOptimizer, OptimizeResult
 class BeamSearchOptimizer:
     """Beam search purchase optimizer — maintains top-K states at each step."""
 
-    def __init__(self, engine: PiecewiseEngine, beam_width: int = 5, engine_autobuy: bool = False, rank: str = "sync"):
+    def __init__(self, engine: PiecewiseEngine, beam_width: int = 5, engine_autobuy: bool = False, rank: str = "rollout", rollout_steps: int = 2000, branch_steps: int = 32):
         self._engine = engine
         self.engine_autobuy = engine_autobuy
         # fix3/A: branch ranking. Branches sit at different times, so raw
@@ -26,7 +26,16 @@ class BeamSearchOptimizer:
         # waited longer. "sync" (default) keeps the branches that are furthest
         # behind in time, ties by production: a time-synchronised frontier.
         # "projected" ranks by balance + rate * (T - t).
-        if rank not in ("sync", "rate", "projected"):
+        # "rollout" (default since 0.1.6): score = final primary production
+        # after a greedy completion to T from the branch. The best completed
+        # plan seen is returned, and the root's completion is the greedy
+        # trajectory itself, so the result is never below greedy.
+        self._rollout_steps = rollout_steps
+        # Cost is O(branch_steps * width^2) greedy completions, so branching
+        # stops after ``branch_steps`` decisions; the best plan found so far
+        # (prefix + greedy completion) is returned. Only for rank="rollout".
+        self._branch_steps = branch_steps
+        if rank not in ("rollout", "sync", "rate", "projected"):
             raise ValueError(f"unknown beam rank {rank!r}")
         self._rank = rank
         self._beam_width = beam_width
@@ -53,7 +62,38 @@ class BeamSearchOptimizer:
             )
         ]
 
+        def _rate(e):
+            return e.get_production_rate(e._get_primary_resource_id())
+
+        cache: dict = {}
+        best_plan = None  # (value, prefix purchases, rollout result, rollout engine)
+
+        def rollout(eng, prefix):
+            # Cache stores values only (memory); the plan objects are kept for
+            # the incumbent alone.
+            nonlocal best_plan
+            key = (eng.time, eng._state_fingerprint(), len(prefix))
+            v = cache.get(key)
+            if v is not None:
+                return v
+            g = GreedyOptimizer(eng._game, copy.deepcopy(eng.state))
+            import warnings as _w
+
+            with _w.catch_warnings():
+                _w.simplefilter("ignore")
+                r = g.optimize(target_time, max_steps=max(0, min(self._rollout_steps, max_steps - len(prefix))))
+            v = r.final_production
+            cache[key] = v
+            if best_plan is None or v > best_plan[0] + 1e-9 * max(1.0, abs(best_plan[0])):
+                best_plan = (v, list(prefix), r, g.engine)
+            return v
+
+        if self._rank == "rollout":
+            rollout(beam[0][0], [])
+
         for _step in range(max_steps):
+            if self._rank == "rollout" and _step >= self._branch_steps:
+                break
             expansions = []
 
             for engine_state, purchases, timeline in beam:
@@ -152,7 +192,9 @@ class BeamSearchOptimizer:
             def _rate(e):
                 return e.get_production_rate(e._get_primary_resource_id())
 
-            if self._rank == "rate":
+            if self._rank == "rollout":
+                expansions.sort(key=lambda x: rollout(x[0], x[1]), reverse=True)
+            elif self._rank == "rate":
                 expansions.sort(key=lambda x: _rate(x[0]), reverse=True)
             elif self._rank == "projected":
                 expansions.sort(
@@ -166,6 +208,30 @@ class BeamSearchOptimizer:
 
             if all(e.time >= target_time for e, _, _ in beam):
                 break
+
+        if self._rank == "rollout" and best_plan is not None:
+            value, prefix, r, eng = best_plan
+            for e, p, _ in beam:  # beam members that finished on their own
+                if e.time >= target_time and _rate(e) > value:
+                    value, prefix, r, eng = _rate(e), p, None, e
+            if r is not None:
+                if eng.time < target_time:  # completion hit max_steps: idle to T
+                    eng.auto_purchase = False
+                    eng.advance_to(target_time)
+                    r.final_production = eng.get_production_rate(pay_resource)
+                    r.final_balance = eng.get_balance(pay_resource)
+                    r.final_time = eng.time
+                self._engine._time = eng._time
+                self._engine._state = eng._state
+                return OptimizeResult(
+                    purchases=list(prefix) + list(r.purchases),
+                    timeline=list(r.timeline),
+                    final_production=r.final_production,
+                    final_balance=r.final_balance,
+                    final_time=r.final_time,
+                    search_decisions=len(prefix),
+                )
+            beam = [(eng, prefix, [])]
 
         best_engine, best_purchases, best_timeline = beam[0]
 
