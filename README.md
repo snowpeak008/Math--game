@@ -1,1 +1,46 @@
 # Math--game
+
+放置 / 增量（idle / incremental）游戏**数值平衡工具**。用于建模资源产出、升级价格曲线、多阶段进度，并模拟、分析游戏节奏。
+
+本项目基于 [ac2522/IdleFramework](https://github.com/ac2522/IdleFramework)（作者 ac2522）。0.1.0 版本即上游原始代码（提交 `a0447d5`），在此致谢原作者。
+
+## 许可证说明
+
+上游仓库在该提交中**未包含 LICENSE 文件**，许可状态不明确。在获得原作者明确授权前，请勿将本代码视为开源许可代码进行再分发或商用。
+
+## 快速开始
+
+需要 Python 3.11+ 与 Node.js 18+。
+
+```bash
+# 安装依赖
+pip install -e ".[dev,server]"
+cd frontend && npm install && cd ..
+
+# 启动后端（FastAPI，端口 8000）
+uvicorn server.app:app --reload --port 8000
+# 或：make server
+
+# 另开终端，启动前端（Vite 开发服务器）
+cd frontend && npm run dev
+# 或：make frontend
+```
+
+运行测试：`pytest tests/ -v`（前端：`cd frontend && npm test`）。
+
+## 目录结构
+
+| 路径 | 说明 |
+| --- | --- |
+| `src/` | 核心引擎：游戏模型、模拟与分析 |
+| `server/` | FastAPI 后端（`server.app:app`） |
+| `frontend/` | Vite + React 前端界面 |
+| `tests/` | 单元 / 属性 / E2E 测试 |
+| `benchmarks/` | 性能基准 |
+| `docs/` | 文档 |
+| `IDLE_GAME_MECHANICS_RESEARCH.md` | 放置游戏机制调研 |
+
+## 版本历史
+
+- **0.1.0** — 上游基线：IdleFramework `a0447d5` 原始代码，新增中文 README 与 `.gitignore`。
+- **0.1.1**（计划中）— 中文输入界面、引擎修复、多货币支持。
