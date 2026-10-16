@@ -72,6 +72,11 @@ class GreedyOptimizer:
         self.game = game
         self.engine = PiecewiseEngine(game, state)
         self.steps: list[PurchaseStep] = []
+        # Opportunity cost of waiting (experiment, fix3/2a). 0 = classic payback.
+        #   oc_mode "wait":   payback += oc_lambda * wait
+        #   oc_mode "income": payback += oc_lambda * wait * income / delta
+        self.oc_lambda: float = 0.0
+        self.oc_mode: str = "wait"
         self._autobuyer_targets: set[str] = set()
         for node in self.game.nodes:
             if isinstance(node, AutobuyerNode):
@@ -186,6 +191,9 @@ class GreedyOptimizer:
             return 0.0
         cost, _ = eng._effective_cost(node_id, price, net, ref=eng._get_primary_resource_id())
         pb = wait + (cost / delta_prod if cost > 0 else 0.0)
+        if self.oc_lambda:
+            p = eng._get_primary_resource_id()
+            pb += self._oc_term(wait, net.get(p, 0.0), delta_prod)
         if pb == float("inf"):
             return 0.0
         return float("inf") if pb <= 0 else 1.0 / pb
@@ -206,7 +214,14 @@ class GreedyOptimizer:
         if short > 0 and rate <= 0:
             return float("inf")
         wait = short / rate if short > 0 else 0.0
-        return wait + cost / delta_prod
+        return wait + cost / delta_prod + self._oc_term(wait, rate, delta_prod)
+
+    def _oc_term(self, wait: float, rate: float, delta_prod: float) -> float:
+        if self.oc_lambda == 0.0 or wait <= 0:
+            return 0.0
+        if self.oc_mode == "income":
+            return self.oc_lambda * wait * rate / delta_prod if delta_prod > 0 else float("inf")
+        return self.oc_lambda * wait
 
     def _payback_score(self, cost: float, delta_prod: float) -> float:
         pb = self.payback_time(cost, delta_prod)
