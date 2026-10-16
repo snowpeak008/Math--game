@@ -226,6 +226,9 @@ class TestBranchAndBound:
 
             for seq in itertools.product(candidates, repeat=3):
                 engine = PiecewiseEngine(game)
+                # fix3/C: reference uses decisions only (no engine auto-buy),
+                # same as the optimizer since v0.1.5.
+                engine.auto_purchase = False
                 engine.set_balance("cash", 600.0)
                 engine.set_owned("cheap", 1)
 

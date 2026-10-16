@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import copy
 
-from idleframework.optimizer._multi import wait_until_affordable
+from idleframework.optimizer._multi import isolated_engine_policy, wait_until_affordable
 import math
 import random
 from dataclasses import dataclass, field
@@ -44,13 +44,16 @@ class MCTSOptimizer:
         rollout_depth: int = 10,
         epsilon: float = 0.1,
         seed: int | None = None,
+        engine_autobuy: bool = False,
     ):
         self._engine = engine
+        self.engine_autobuy = engine_autobuy
         self._iterations = iterations
         self._rollout_depth = rollout_depth
         self._epsilon = epsilon
         self._rng = random.Random(seed)
 
+    @isolated_engine_policy
     def optimize(
         self,
         target_time: float,
@@ -64,7 +67,7 @@ class MCTSOptimizer:
         while step_count < max_steps and self._engine.time < target_time:
             greedy = GreedyOptimizer(self._engine._game, copy.deepcopy(self._engine.state))
             candidates = greedy.get_candidates()
-            candidates = [c for c in candidates if c["efficiency"] > 0]
+            candidates = [c for c in candidates if c["efficiency"] > 0 and c.get("wait", 0.0) != float("inf")]
 
             if not candidates:
                 break
@@ -75,7 +78,14 @@ class MCTSOptimizer:
             affordable = []
             for c in candidates:
                 if c.get("multi"):
-                    if c["wait"] <= remaining_time:
+                    # fix3/B: wait recomputed on the live engine, not the
+                    # candidate snapshot.
+                    price = self._engine._price(c["node_id"])
+                    if price is None:
+                        continue
+                    _, net = self._engine._compute_net_rates()
+                    w = self._engine._time_until_affordable(c["node_id"], price, net)
+                    if w is not None and w <= remaining_time:
                         affordable.append(c)
                 elif c["cost"] <= 0 or balance >= c["cost"] - 1e-10:
                     affordable.append(c)
@@ -109,6 +119,7 @@ class MCTSOptimizer:
                 purchase_time = self._engine.time + wait
                 if purchase_time > target_time:
                     break
+                self._engine.reserve_for(best_id)
                 self._engine.advance_to(purchase_time)
 
                 new_balance = self._engine.get_balance(pay_resource)
@@ -116,6 +127,7 @@ class MCTSOptimizer:
                     nudge = min(purchase_time + 1e-6, target_time)
                     if nudge > self._engine.time:
                         self._engine.advance_to(nudge)
+                self._engine.release_reservations()
 
             # Try purchase (advance_to may have auto-purchased, changing state)
             try:
@@ -163,7 +175,7 @@ class MCTSOptimizer:
             while node.children and depth < self._rollout_depth:
                 sim_greedy = GreedyOptimizer(sim_engine._game, copy.deepcopy(sim_engine.state))
                 sim_candidates = sim_greedy.get_candidates()
-                sim_candidates = [c for c in sim_candidates if c["efficiency"] > 0]
+                sim_candidates = [c for c in sim_candidates if c["efficiency"] > 0 and c.get("wait", 0.0) != float("inf")]
                 if not sim_candidates:
                     break
 
@@ -270,6 +282,7 @@ class MCTSOptimizer:
             purchase_time = engine.time + wait
             if purchase_time > target_time:
                 return False
+            engine.reserve_for(candidate["node_id"])
             engine.advance_to(purchase_time)
 
             new_balance = engine.get_balance(pay_resource)
@@ -277,6 +290,7 @@ class MCTSOptimizer:
                 nudge = min(purchase_time + 1e-6, target_time)
                 if nudge > engine.time:
                     engine.advance_to(nudge)
+            engine.release_reservations()
 
         final_balance = engine.get_balance(pay_resource)
         if final_balance < cost - 1e-10:
@@ -303,7 +317,7 @@ class MCTSOptimizer:
 
             greedy = GreedyOptimizer(engine._game, copy.deepcopy(engine.state))
             candidates = greedy.get_candidates()
-            candidates = [c for c in candidates if c["efficiency"] > 0]
+            candidates = [c for c in candidates if c["efficiency"] > 0 and c.get("wait", 0.0) != float("inf")]
             if not candidates:
                 break
 

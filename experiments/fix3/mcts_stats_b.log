@@ -1,0 +1,5 @@
+{"iterations": 1000, "seed": 1, "final_production": 4770.0, "n_purchases": 123, "wall_s": 900.6}
+{"iterations": 1000, "seed": 2, "final_production": 327960.0, "n_purchases": 197, "wall_s": 1185.9}
+{"iterations": 1000, "seed": 3, "final_production": 339720.0, "n_purchases": 200, "wall_s": 1229.3}
+{"iterations": 1000, "seed": 4, "final_production": 27012.0, "n_purchases": 148, "wall_s": 1014.5}
+{"iterations": 1000, "seed": 5, "final_production": 162150.0, "n_purchases": 189, "wall_s": 1706.8}

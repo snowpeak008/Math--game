@@ -1,0 +1,71 @@
+[
+ {
+  "opt": "greedy",
+  "kw": {},
+  "T": 1800.0,
+  "steps": 1000,
+  "wall_s": 0.15,
+  "final_production": 451620.0,
+  "n_logged": 318,
+  "n_owned_total": 318,
+  "multi_bought": [
+   "h_shop_1",
+   "h_shop_2",
+   "legend",
+   "p_shop_all",
+   "p_shop_bank",
+   "ticket_press"
+  ],
+  "log_matches_state": true
+ },
+ {
+  "opt": "beam",
+  "kw": {
+   "w": 3
+  },
+  "T": 1800.0,
+  "steps": 1000,
+  "wall_s": 16.23,
+  "final_production": 446160.0,
+  "n_logged": 351,
+  "n_owned_total": 351,
+  "multi_bought": [
+   "h_shop_1",
+   "h_shop_2",
+   "legend",
+   "p_shop_all",
+   "p_shop_bank",
+   "ticket_press"
+  ],
+  "log_matches_state": true
+ },
+ {
+  "opt": "bnb",
+  "kw": {
+   "d": 4
+  },
+  "T": 1800.0,
+  "steps": 1000,
+  "wall_s": 0.37,
+  "final_production": 129.0,
+  "n_logged": 4,
+  "n_owned_total": 4,
+  "multi_bought": [],
+  "log_matches_state": true
+ },
+ {
+  "opt": "mcts",
+  "kw": {
+   "it": 10,
+   "rd": 5
+  },
+  "T": 1800.0,
+  "steps": 1000,
+  "wall_s": 8.88,
+  "final_production": 855.0,
+  "n_logged": 115,
+  "n_owned_total": 115,
+  "multi_bought": [],
+  "log_matches_state": true
+ }
+]

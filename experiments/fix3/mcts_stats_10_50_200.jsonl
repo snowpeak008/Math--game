@@ -1,0 +1,15 @@
+{"iterations": 10, "seed": 1, "final_production": 855.0, "n_purchases": 115, "wall_s": 9.2}
+{"iterations": 10, "seed": 2, "final_production": 221.0, "n_purchases": 69, "wall_s": 5.3}
+{"iterations": 10, "seed": 3, "final_production": 341.0, "n_purchases": 88, "wall_s": 7.0}
+{"iterations": 10, "seed": 4, "final_production": 27366.0, "n_purchases": 153, "wall_s": 10.8}
+{"iterations": 10, "seed": 5, "final_production": 343800.0, "n_purchases": 198, "wall_s": 10.9}
+{"iterations": 50, "seed": 1, "final_production": 27948.0, "n_purchases": 153, "wall_s": 53.3}
+{"iterations": 50, "seed": 2, "final_production": 155190.0, "n_purchases": 182, "wall_s": 62.3}
+{"iterations": 50, "seed": 3, "final_production": 9378.0, "n_purchases": 125, "wall_s": 39.5}
+{"iterations": 50, "seed": 4, "final_production": 150900.0, "n_purchases": 166, "wall_s": 55.4}
+{"iterations": 50, "seed": 5, "final_production": 317340.0, "n_purchases": 169, "wall_s": 49.8}
+{"iterations": 200, "seed": 1, "final_production": 27696.0, "n_purchases": 170, "wall_s": 242.7}
+{"iterations": 200, "seed": 2, "final_production": 134670.0, "n_purchases": 159, "wall_s": 212.5}
+{"iterations": 200, "seed": 3, "final_production": 57096.0, "n_purchases": 176, "wall_s": 242.0}
+{"iterations": 200, "seed": 4, "final_production": 163230.0, "n_purchases": 200, "wall_s": 278.3}
+{"iterations": 200, "seed": 5, "final_production": 148470.0, "n_purchases": 150, "wall_s": 198.0}

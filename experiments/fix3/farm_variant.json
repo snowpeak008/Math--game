@@ -1,0 +1,48 @@
+[
+ {
+  "opt": "greedy",
+  "final_production": 1447740.0,
+  "wall_s": 0.5,
+  "farm_items_bought": [
+   "forge",
+   "stage_1",
+   "stage_2",
+   "stage_3",
+   "stage_4",
+   "stage_5",
+   "trainer"
+  ],
+  "first_farm_t": 99.1
+ },
+ {
+  "opt": "beam(w3,sync)",
+  "final_production": 1486080.0,
+  "wall_s": 31.5,
+  "farm_items_bought": [
+   "forge",
+   "stage_1",
+   "stage_2",
+   "stage_3",
+   "stage_4",
+   "stage_5",
+   "trainer"
+  ],
+  "first_farm_t": 101.9
+ },
+ {
+  "opt": "bnb(d4,auto)",
+  "final_production": 129.0,
+  "wall_s": 0.8,
+  "farm_items_bought": [],
+  "first_farm_t": null
+ },
+ {
+  "opt": "mcts(10,seed1)",
+  "final_production": 682.5,
+  "wall_s": 15.7,
+  "farm_items_bought": [
+   "trainer"
+  ],
+  "first_farm_t": 715.7
+ }
+]

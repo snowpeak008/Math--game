@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import copy
 
-from idleframework.optimizer._multi import wait_until_affordable
+from idleframework.optimizer._multi import isolated_engine_policy, wait_until_affordable
 
 from idleframework.engine.events import PurchaseEvent
 from idleframework.engine.segments import PiecewiseEngine
@@ -18,10 +18,20 @@ from idleframework.optimizer.greedy import GreedyOptimizer, OptimizeResult
 class BeamSearchOptimizer:
     """Beam search purchase optimizer — maintains top-K states at each step."""
 
-    def __init__(self, engine: PiecewiseEngine, beam_width: int = 5):
+    def __init__(self, engine: PiecewiseEngine, beam_width: int = 5, engine_autobuy: bool = False, rank: str = "sync"):
         self._engine = engine
+        self.engine_autobuy = engine_autobuy
+        # fix3/A: branch ranking. Branches sit at different times, so raw
+        # production ("rate", the pre-0.1.5 key) favours branches that simply
+        # waited longer. "sync" (default) keeps the branches that are furthest
+        # behind in time, ties by production: a time-synchronised frontier.
+        # "projected" ranks by balance + rate * (T - t).
+        if rank not in ("sync", "rate", "projected"):
+            raise ValueError(f"unknown beam rank {rank!r}")
+        self._rank = rank
         self._beam_width = beam_width
 
+    @isolated_engine_policy
     def optimize(
         self,
         target_time: float,
@@ -57,7 +67,10 @@ class BeamSearchOptimizer:
                     expansions.append((engine_state, purchases, timeline))
                     continue
 
-                candidates = [c for c in candidates if c["efficiency"] > 0]
+                candidates = [
+                    c for c in candidates
+                    if c["efficiency"] > 0 and c.get("wait", 0.0) != float("inf")
+                ]
                 if not candidates:
                     expansions.append((engine_state, purchases, timeline))
                     continue
@@ -86,6 +99,7 @@ class BeamSearchOptimizer:
                         purchase_time = branch_engine.time + wait
                         if purchase_time > target_time:
                             continue
+                        branch_engine.reserve_for(node_id)
                         branch_engine.advance_to(purchase_time)
 
                         new_balance = branch_engine.get_balance(pay_resource)
@@ -93,6 +107,7 @@ class BeamSearchOptimizer:
                             nudge = min(purchase_time + 1e-6, target_time)
                             if nudge > branch_engine.time:
                                 branch_engine.advance_to(nudge)
+                        branch_engine.release_reservations()
 
                     # Re-check affordability (advance_to may have auto-purchased,
                     # changing both balance and the node's current cost)
@@ -125,15 +140,28 @@ class BeamSearchOptimizer:
                     expanded_any = True
 
                 if not expanded_any:
+                    # Nothing more is affordable before target_time: idle out.
+                    if engine_state.time < target_time:
+                        engine_state = copy.deepcopy(engine_state)
+                        engine_state.advance_to(target_time)
                     expansions.append((engine_state, purchases, timeline))
 
             if not expansions:
                 break
 
-            expansions.sort(
-                key=lambda x: x[0].get_production_rate(x[0]._get_primary_resource_id()),
-                reverse=True,
-            )
+            def _rate(e):
+                return e.get_production_rate(e._get_primary_resource_id())
+
+            if self._rank == "rate":
+                expansions.sort(key=lambda x: _rate(x[0]), reverse=True)
+            elif self._rank == "projected":
+                expansions.sort(
+                    key=lambda x: x[0].get_balance(x[0]._get_primary_resource_id())
+                    + _rate(x[0]) * max(0.0, target_time - x[0].time),
+                    reverse=True,
+                )
+            else:
+                expansions.sort(key=lambda x: (x[0].time, -_rate(x[0])))
             beam = expansions[: self._beam_width]
 
             if all(e.time >= target_time for e, _, _ in beam):

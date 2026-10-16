@@ -135,6 +135,14 @@ class PiecewiseEngine:
         # advance_to() call ended mid-wait; resumed by the next call so that
         # chunked calls reproduce a single long call (see advance_to).
         self._pending: tuple[str, tuple] | None = None
+        # fix3/A: optimizer controls. ``auto_purchase`` toggles the built-in
+        # purchase policy and free purchases inside advance_to();
+        # ``game_autobuyers`` toggles Autobuyer nodes; ``reservations`` maps
+        # currency -> amount locked for an optimizer's committed target, which
+        # autobuyers may not spend (they see balance - reserved).
+        self.auto_purchase: bool = True
+        self.game_autobuyers: bool = True
+        self.reservations: dict[str, float] = {}
         # Nodes already reported as priced above their currency's capacity.
         self._capacity_warned: set[str] = set()
         # Balance-dependent (stock-linked) in-segment dynamics; inactive unless
@@ -523,6 +531,24 @@ class PiecewiseEngine:
                 best = (ab_id, next_fire)
         return best
 
+    def _fits_unreserved(self, node_id: str, count: int = 1) -> bool:
+        """True if node_id x count is payable from balance minus reservations."""
+        price = self._price(node_id, count)
+        if price is None:
+            return False
+        for cid, amt in price:
+            if cid and amt > 0 and self._balance(cid) - self.reservations.get(cid, 0.0) < amt - 1e-9:
+                return False
+        return True
+
+    def reserve_for(self, node_id: str) -> None:
+        """Lock the per-currency price of node_id (replaces any prior lock)."""
+        price = self._price(node_id) or []
+        self.reservations = {cid: amt for cid, amt in price if cid and amt > 0}
+
+    def release_reservations(self) -> None:
+        self.reservations = {}
+
     def _execute_autobuyer(self, autobuyer_id: str) -> None:
         """Execute an autobuyer fire event."""
         ab = self._autobuyers[autobuyer_id]
@@ -546,6 +572,10 @@ class PiecewiseEngine:
         elif ab.bulk_amount == "max":
             amount = self._compute_max_affordable(ab.target)
 
+        if amount > 0 and self.reservations:
+            # Reservation ledger: only balance - reserved is spendable.
+            while amount > 0 and not self._fits_unreserved(ab.target, amount):
+                amount -= 1
         if amount > 0:
             with contextlib.suppress(ValueError):
                 self.purchase(ab.target, amount)
@@ -1253,7 +1283,7 @@ class PiecewiseEngine:
             # apply free purchases) mid-wait, so neither do we: the result is
             # independent of how the caller chunks advance_to().
             resumed = self._resume_pending()
-            if resumed is None:
+            if resumed is None and self.auto_purchase:
                 # Apply free purchases at current time
                 self.apply_free_purchases()
 
@@ -1261,8 +1291,11 @@ class PiecewiseEngine:
             rates = net_rates  # Use net rates for accumulation
 
             # Find next events
-            next_purchase = resumed if resumed is not None else self.find_next_purchase()
-            next_ab = self._next_autobuyer_time()
+            if self.auto_purchase:
+                next_purchase = resumed if resumed is not None else self.find_next_purchase()
+            else:
+                next_purchase = None
+            next_ab = self._next_autobuyer_time() if self.game_autobuyers else None
 
             # Determine event times
             purchase_time = None

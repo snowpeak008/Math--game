@@ -76,6 +76,13 @@ class GreedyOptimizer:
         #   oc_mode "wait":   payback += oc_lambda * wait
         #   oc_mode "income": payback += oc_lambda * wait * income / delta
         self.oc_lambda: float = 0.0
+        # fix3/A: reservation ledger for greedy's committed target. Off by
+        # default: with it on, game autobuyers can only spend surplus above
+        # the target price, which starves them whenever greedy is saving.
+        self.reserve_targets = False
+        # fix3/F baseline policy "save to X then buy": a single-currency
+        # purchase waits until balance >= cost + save_floor. 0 = off.
+        self.save_floor = 0.0
         self.oc_mode: str = "wait"
         self._autobuyer_targets: set[str] = set()
         for node in self.game.nodes:
@@ -214,7 +221,31 @@ class GreedyOptimizer:
         if short > 0 and rate <= 0:
             return float("inf")
         wait = short / rate if short > 0 else 0.0
+        if self.oc_mode == "derivative":
+            net_gain = delta_prod - self._stock_income_loss(cost, balance)
+            if net_gain <= 0:
+                return float("inf")
+            return wait + cost / net_gain
         return wait + cost / delta_prod + self._oc_term(wait, rate, delta_prod)
+
+    def _stock_income_loss(self, cost: float, balance: float) -> float:
+        """Primary income lost by spending ``cost`` (fix3/F, oc_mode "derivative").
+
+        lambda = d(income)/d(stock) is derived from the game, not tuned: the
+        loss is the secant I(B) - I(B - cost) at the balance B = max(balance,
+        cost) held at purchase time. For a linear stock-linked income
+        (I = k * stock) this is exactly k * cost; without stock-linked
+        income it is 0 and the score equals plain payback. The loss is
+        treated as permanent, which overstates it when the stock regrows.
+        """
+        eng = self.engine
+        if not eng._stock.enabled:
+            return 0.0
+        p = eng._get_primary_resource_id()
+        b = max(balance, cost)
+        hi = eng._stock.net_rates_with({p: b}).get(p, 0.0)
+        lo = eng._stock.net_rates_with({p: b - cost}).get(p, 0.0)
+        return max(0.0, hi - lo)
 
     def _oc_term(self, wait: float, rate: float, delta_prod: float) -> float:
         if self.oc_lambda == 0.0 or wait <= 0:
@@ -419,7 +450,11 @@ class GreedyOptimizer:
             node = self.game.get_node(node_id)
             ns = self.engine.state.get(node_id)
             if self._is_multi(node):
-                if not self._wait_multi(node_id, target_time):
+                if self.reserve_targets:
+                    self.engine.reserve_for(node_id)
+                ok = self._wait_multi(node_id, target_time)
+                self.engine.release_reservations()
+                if not ok:
                     break
                 if isinstance(node, Upgrade) and self.engine.state.get(node_id).purchased:
                     continue
@@ -460,14 +495,17 @@ class GreedyOptimizer:
             # Wait (with autobuyers) until affordable or target_time reached
             gave_up = False
             guard = 0
-            while self.engine.state.get(currency_id).current_value < cost:
+            if self.reserve_targets:
+                self.engine.reservations = {currency_id: cost}
+            need = cost + self.save_floor
+            while self.engine.state.get(currency_id).current_value < need:
                 guard += 1
                 rate = self.engine.compute_production_rates().get(currency_id, 0.0)
                 if rate <= 0 or guard > 10_000:
                     gave_up = True
                     break
                 balance = self.engine.state.get(currency_id).current_value
-                wait = self.engine._time_to_afford(currency_id, cost, balance, rate)
+                wait = self.engine._time_to_afford(currency_id, need, balance, rate)
                 if wait is None:
                     gave_up = True
                     break
@@ -479,8 +517,9 @@ class GreedyOptimizer:
                 self._advance_with_autobuyers(advance_target)
                 # floating-point drift guard
                 bal = self.engine.state.get(currency_id).current_value
-                if bal < cost and cost - bal <= 1e-9 * max(1.0, cost):
-                    self.engine.state.get(currency_id).current_value = cost
+                if bal < need and need - bal <= 1e-9 * max(1.0, need):
+                    self.engine.state.get(currency_id).current_value = need
+            self.engine.release_reservations()
             if gave_up:
                 break
             if isinstance(node, Upgrade) and self.engine.state.get(node_id).purchased:

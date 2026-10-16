@@ -12,6 +12,14 @@ from __future__ import annotations
 
 def wait_until_affordable(engine, node_id: str, target_time: float) -> bool:
     """Advance ``engine`` until node_id is affordable. False if impossible before target_time."""
+    engine.reserve_for(node_id)
+    try:
+        return _wait(engine, node_id, target_time)
+    finally:
+        engine.release_reservations()
+
+
+def _wait(engine, node_id: str, target_time: float) -> bool:
     for _ in range(64):
         price = engine._price(node_id)
         if price is None:
@@ -44,3 +52,27 @@ def buy_multi(engine, candidate: dict, target_time: float) -> float | None:
         return engine.purchase(candidate["node_id"], 1)
     except ValueError:
         return None
+
+
+def isolated_engine_policy(optimize):
+    """Decorator for optimizer.optimize: disable engine auto-buying (fix3/A).
+
+    While an optimizer runs, the engine's built-in purchase policy and free
+    purchases are off unless the optimizer was built with
+    ``engine_autobuy=True``; game Autobuyer nodes keep firing (they are game
+    mechanics) but respect the reservation ledger. Flags are restored after.
+    """
+    import functools
+
+    @functools.wraps(optimize)
+    def wrapper(self, *args, **kwargs):
+        eng = self._engine
+        saved = eng.auto_purchase
+        eng.auto_purchase = getattr(self, "engine_autobuy", False)
+        try:
+            return optimize(self, *args, **kwargs)
+        finally:
+            eng.auto_purchase = saved
+            eng.release_reservations()
+
+    return wrapper

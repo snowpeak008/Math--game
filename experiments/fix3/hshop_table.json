@@ -1,0 +1,136 @@
+[
+ {
+  "state": "rich start (C config)",
+  "t": 0.0,
+  "item": "h_shop_1",
+  "consumes": [
+   [
+    "gold",
+    2000.0
+   ]
+  ],
+  "requires": [
+   [
+    "honor",
+    100.0
+   ]
+  ],
+  "balances": {
+   "gold": 60000,
+   "honor": 1200
+  },
+  "income": {
+   "gold": 0.0,
+   "honor": 0.0
+  },
+  "binding_currency_cost": "gold",
+  "effective_cost_gold": 2000.0,
+  "delta_gold_per_s": 0.0,
+  "cost_over_delta_s": null,
+  "wait_s": 0.0,
+  "wait_per_currency_s": {},
+  "payback_wait_plus_cost_over_delta_s": null
+ },
+ {
+  "state": "rich start (C config)",
+  "t": 0.0,
+  "item": "h_shop_2",
+  "consumes": [
+   [
+    "gold",
+    50000.0
+   ]
+  ],
+  "requires": [
+   [
+    "honor",
+    1000.0
+   ]
+  ],
+  "balances": {
+   "gold": 60000,
+   "honor": 1200
+  },
+  "income": {
+   "gold": 0.0,
+   "honor": 0.0
+  },
+  "binding_currency_cost": "gold",
+  "effective_cost_gold": 50000.0,
+  "delta_gold_per_s": 0.0,
+  "cost_over_delta_s": null,
+  "wait_s": 0.0,
+  "wait_per_currency_s": {},
+  "payback_wait_plus_cost_over_delta_s": null
+ },
+ {
+  "state": "greedy trajectory before step 36 (h_shop_1)",
+  "t": 199.9,
+  "item": "h_shop_1",
+  "consumes": [
+   [
+    "gold",
+    2000.0
+   ]
+  ],
+  "requires": [
+   [
+    "honor",
+    100.0
+   ]
+  ],
+  "balances": {
+   "gold": 0.0,
+   "honor": 69.0
+  },
+  "income": {
+   "gold": 104.0,
+   "honor": 1.5
+  },
+  "binding_currency_cost": "gold",
+  "effective_cost_gold": 2000.0,
+  "delta_gold_per_s": 80.0,
+  "cost_over_delta_s": 25.0,
+  "wait_s": 20.7,
+  "wait_per_currency_s": {
+   "gold": 19.2,
+   "honor": 20.7
+  },
+  "payback_wait_plus_cost_over_delta_s": 45.7
+ },
+ {
+  "state": "greedy trajectory before step 36 (h_shop_1)",
+  "t": 199.9,
+  "item": "h_shop_2",
+  "consumes": [
+   [
+    "gold",
+    50000.0
+   ]
+  ],
+  "requires": [
+   [
+    "honor",
+    1000.0
+   ]
+  ],
+  "balances": {
+   "gold": 0.0,
+   "honor": 69.0
+  },
+  "income": {
+   "gold": 104.0,
+   "honor": 1.5
+  },
+  "binding_currency_cost": "gold",
+  "effective_cost_gold": 50000.0,
+  "delta_gold_per_s": 104.0,
+  "cost_over_delta_s": 480.8,
+  "wait_s": 620.7,
+  "wait_per_currency_s": {
+   "gold": 480.8,
+   "honor": 620.7
+  },
+  "payback_wait_plus_cost_over_delta_s": 1101.5
+ }
+]

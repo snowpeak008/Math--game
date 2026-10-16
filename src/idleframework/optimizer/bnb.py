@@ -8,11 +8,63 @@ from __future__ import annotations
 
 import copy
 
-from idleframework.optimizer._multi import wait_until_affordable
+from idleframework.optimizer._multi import isolated_engine_policy, wait_until_affordable
 
 from idleframework.engine.events import PurchaseEvent
 from idleframework.engine.segments import PiecewiseEngine
 from idleframework.optimizer.greedy import GreedyOptimizer, OptimizeResult
+
+
+def sound_bound_applicable(engine: PiecewiseEngine) -> bool:
+    """Conditions under which _sound_bound is a true optimistic bound.
+
+    Only Resource / Generator / Upgrade nodes, only production_target edges,
+    no balance-linked (stock) dynamics, engine auto-buy off, every upgrade
+    non-decreasing (multiplicative magnitude >= 1, additive/percentage >= 0).
+    Then primary production is sum_g owned_g * u_g * M_g(purchased) with M_g
+    monotone in the purchased set, so it is maximised by buying everything.
+    """
+    from idleframework.model.nodes import Generator, Resource, Upgrade
+
+    game = engine._game
+    for n in game.nodes:
+        if not isinstance(n, (Resource, Generator, Upgrade)):
+            return False
+        if isinstance(n, Upgrade):
+            if n.upgrade_type == "multiplicative" and n.magnitude < 1:
+                return False
+            if n.upgrade_type != "multiplicative" and n.magnitude < 0:
+                return False
+    if any(e.edge_type != "production_target" for e in game.edges):
+        return False
+    if engine._stock.enabled or engine.auto_purchase:
+        return False
+    return True
+
+
+def _sound_bound(engine: PiecewiseEngine, pay: str, remaining: int) -> float:
+    """Optimistic primary production after <= remaining more purchases.
+
+    P_all + remaining * max_g d_g, where P_all is the primary rate with every
+    upgrade bought and d_g the gain of one more unit of generator g in that
+    fully-upgraded state (>= any reachable per-unit gain, by monotonicity).
+    Valid under sound_bound_applicable(); loose but never below the optimum.
+    """
+    from idleframework.model.nodes import Generator, Upgrade
+
+    e = copy.deepcopy(engine)
+    for n in e._game.nodes:
+        if isinstance(n, Upgrade):
+            e._state.get(n.id).purchased = True
+    p_all = e.get_production_rate(pay)
+    best = 0.0
+    for n in e._game.nodes:
+        if isinstance(n, Generator):
+            ns = e._state.get(n.id)
+            ns.owned += 1
+            best = max(best, e.get_production_rate(pay) - p_all)
+            ns.owned -= 1
+    return p_all + remaining * best
 
 
 def _purchases_from_segments(segments) -> list[PurchaseEvent]:
@@ -36,10 +88,24 @@ def _purchases_from_segments(segments) -> list[PurchaseEvent]:
 class BranchAndBoundOptimizer:
     """DFS Branch-and-Bound optimizer with upper-bound pruning."""
 
-    def __init__(self, engine: PiecewiseEngine, depth_limit: int = 20):
+    def __init__(self, engine: PiecewiseEngine, depth_limit: int = 20, engine_autobuy: bool = False, bound: str = "auto"):
         self._engine = engine
+        self.engine_autobuy = engine_autobuy
+        # fix3/C: pruning bound. "sound" = structural optimistic bound
+        # (_sound_bound); "auto" = sound when the game satisfies its
+        # assumptions, else no pruning; "none" = exhaustive; "legacy" = the
+        # pre-0.1.5 heuristic current + remaining * max(candidate delta),
+        # which is NOT a valid bound (upgrades multiply later deltas;
+        # producers of other currencies have 0 primary delta but unlock
+        # shop items).
+        if bound not in ("auto", "sound", "none", "legacy"):
+            raise ValueError(f"unknown bound {bound!r}")
+        self._bound = bound
+        self.nodes_expanded = 0
+        self.nodes_pruned = 0
         self._depth_limit = depth_limit
 
+    @isolated_engine_policy
     def optimize(
         self,
         target_time: float,
@@ -52,6 +118,9 @@ class BranchAndBoundOptimizer:
         self._best_purchases: list[PurchaseEvent] = []
         self._best_engine: PiecewiseEngine | None = None
         self._best_n_decisions = 0
+        self._bound_ok = sound_bound_applicable(self._engine)
+        if self._bound == "sound" and not self._bound_ok:
+            raise ValueError("bound='sound' requires a game satisfying sound_bound_applicable()")
 
         self._dfs(
             engine=copy.deepcopy(self._engine),
@@ -103,19 +172,26 @@ class BranchAndBoundOptimizer:
 
         greedy = GreedyOptimizer(engine._game, copy.deepcopy(engine.state))
         candidates = greedy.get_candidates()
-        candidates = [c for c in candidates if c["efficiency"] > 0]
+        candidates = [c for c in candidates if c["efficiency"] > 0 and c.get("wait", 0.0) != float("inf")]
 
         if not candidates:
             return
 
         candidates.sort(key=lambda c: (-c["efficiency"], c["cost"]))
 
-        best_delta = max(c["delta_production"] for c in candidates)
         remaining = self._depth_limit - depth
-        upper_bound = current_prod + remaining * best_delta
+        if self._bound == "legacy":
+            best_delta = max(c["delta_production"] for c in candidates)
+            upper_bound = current_prod + remaining * best_delta
+        elif self._bound == "none" or (self._bound == "auto" and not self._bound_ok):
+            upper_bound = float("inf")
+        else:
+            upper_bound = _sound_bound(engine, self._pay_resource, remaining)
 
-        if upper_bound <= self._best_production:
+        if upper_bound <= self._best_production + 1e-9 * max(1.0, abs(self._best_production)):
+            self.nodes_pruned += 1
             return
+        self.nodes_expanded += 1
 
         for candidate in candidates:
             branch_engine = copy.deepcopy(engine)
@@ -133,6 +209,7 @@ class BranchAndBoundOptimizer:
                 purchase_time = branch_engine.time + wait
                 if purchase_time > self._target_time:
                     continue
+                branch_engine.reserve_for(candidate["node_id"])
                 branch_engine.advance_to(purchase_time)
 
                 new_balance = branch_engine.get_balance(self._pay_resource)
@@ -140,6 +217,7 @@ class BranchAndBoundOptimizer:
                     nudge = min(purchase_time + 1e-6, self._target_time)
                     if nudge > branch_engine.time:
                         branch_engine.advance_to(nudge)
+                branch_engine.release_reservations()
 
             final_balance = branch_engine.get_balance(self._pay_resource)
             if not candidate.get("multi") and final_balance < cost - 1e-10:

@@ -1,0 +1,308 @@
+{
+ "stock_linear": {
+  "T": 450.0,
+  "baseline": {
+   "g5": null,
+   "g10": null,
+   "final_production": null,
+   "n": null,
+   "error": "OverflowError"
+  },
+  "derivative": {
+   "g5": 204.498,
+   "g10": null,
+   "final_production": 28595479.190217532,
+   "n": 67
+  },
+  "grid_best": {
+   "X": 0.0,
+   "g5": null,
+   "g10": null,
+   "final_production": null,
+   "n": null,
+   "error": "OverflowError"
+  },
+  "grid": [
+   {
+    "X": 0.0,
+    "g5": null,
+    "g10": null,
+    "final_production": null,
+    "n": null,
+    "error": "OverflowError"
+   },
+   {
+    "X": 10.0,
+    "g5": null,
+    "g10": null,
+    "final_production": null,
+    "n": null,
+    "error": "OverflowError"
+   },
+   {
+    "X": 31.622776601683793,
+    "g5": null,
+    "g10": null,
+    "final_production": null,
+    "n": null,
+    "error": "OverflowError"
+   },
+   {
+    "X": 100.0,
+    "g5": null,
+    "g10": null,
+    "final_production": null,
+    "n": null,
+    "error": "OverflowError"
+   },
+   {
+    "X": 316.22776601683796,
+    "g5": null,
+    "g10": null,
+    "final_production": 257.9642521328649,
+    "n": 42
+   },
+   {
+    "X": 1000.0,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.0045101402046015,
+    "n": 0
+   },
+   {
+    "X": 3162.2776601683795,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.0045101402046015,
+    "n": 0
+   },
+   {
+    "X": 10000.0,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.0045101402046015,
+    "n": 0
+   },
+   {
+    "X": 31622.776601683792,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.0045101402046015,
+    "n": 0
+   },
+   {
+    "X": 100000.0,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.0045101402046015,
+    "n": 0
+   },
+   {
+    "X": 316227.7660168379,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.0045101402046015,
+    "n": 0
+   },
+   {
+    "X": 1000000.0,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.0045101402046015,
+    "n": 0
+   },
+   {
+    "X": 3162277.6601683795,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.0045101402046015,
+    "n": 0
+   },
+   {
+    "X": 10000000.0,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.0045101402046015,
+    "n": 0
+   },
+   {
+    "X": 31622776.60168379,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.0045101402046015,
+    "n": 0
+   },
+   {
+    "X": 100000000.0,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.0045101402046015,
+    "n": 0
+   },
+   {
+    "X": 316227766.01683795,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.0045101402046015,
+    "n": 0
+   },
+   {
+    "X": 1000000000.0,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.0045101402046015,
+    "n": 0
+   }
+  ]
+ },
+ "stock_log": {
+  "T": 1000.0,
+  "baseline": {
+   "g5": 176.104,
+   "g10": 678.358,
+   "final_production": 333702977.393908,
+   "n": 322
+  },
+  "derivative": {
+   "g5": 219.548,
+   "g10": null,
+   "final_production": 3770039.302033174,
+   "n": 20
+  },
+  "grid_best": {
+   "X": 0.0,
+   "g5": 176.104,
+   "g10": 678.358,
+   "final_production": 333702977.393908,
+   "n": 322
+  },
+  "grid": [
+   {
+    "X": 0.0,
+    "g5": 176.104,
+    "g10": 678.358,
+    "final_production": 333702977.393908,
+    "n": 322
+   },
+   {
+    "X": 10.0,
+    "g5": 183.441,
+    "g10": 685.686,
+    "final_production": 178490908.78755003,
+    "n": 291
+   },
+   {
+    "X": 31.622776601683793,
+    "g5": 200.694,
+    "g10": 702.926,
+    "final_production": 259364696.07153463,
+    "n": 311
+   },
+   {
+    "X": 100.0,
+    "g5": 257.87,
+    "g10": 760.067,
+    "final_production": 176629900.16647455,
+    "n": 291
+   },
+   {
+    "X": 316.22776601683796,
+    "g5": 430.378,
+    "g10": 932.494,
+    "final_production": 81582443.53582281,
+    "n": 290
+   },
+   {
+    "X": 1000.0,
+    "g5": 962.14,
+    "g10": null,
+    "final_production": 18174.490722892897,
+    "n": 100
+   },
+   {
+    "X": 3162.2776601683795,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.3102622515321254,
+    "n": 0
+   },
+   {
+    "X": 10000.0,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.3102622515321254,
+    "n": 0
+   },
+   {
+    "X": 31622.776601683792,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.3102622515321254,
+    "n": 0
+   },
+   {
+    "X": 100000.0,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.3102622515321254,
+    "n": 0
+   },
+   {
+    "X": 316227.7660168379,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.3102622515321254,
+    "n": 0
+   },
+   {
+    "X": 1000000.0,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.3102622515321254,
+    "n": 0
+   },
+   {
+    "X": 3162277.6601683795,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.3102622515321254,
+    "n": 0
+   },
+   {
+    "X": 10000000.0,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.3102622515321254,
+    "n": 0
+   },
+   {
+    "X": 31622776.60168379,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.3102622515321254,
+    "n": 0
+   },
+   {
+    "X": 100000000.0,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.3102622515321254,
+    "n": 0
+   },
+   {
+    "X": 316227766.01683795,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.3102622515321254,
+    "n": 0
+   },
+   {
+    "X": 1000000000.0,
+    "g5": null,
+    "g10": null,
+    "final_production": 1.3102622515321254,
+    "n": 0
+   }
+  ]
+ }
+}

@@ -1,0 +1,27 @@
+Traceback (most recent call last):
+  File "/workspace/IdleFramework/experiments/fix3/oc_derivative.py", line 32, in <module>
+    base = run(f, T); der = run(f, T, mode="derivative")
+  File "/workspace/IdleFramework/experiments/fix3/oc_derivative.py", line 22, in run
+    r = o.optimize(target_time=T)
+  File "/workspace/IdleFramework/src/idleframework/optimizer/greedy.py", line 705, in optimize
+    steps = self.run(target_time=target_time, max_steps=max_steps)
+  File "/workspace/IdleFramework/src/idleframework/optimizer/greedy.py", line 560, in run
+    self._advance_with_autobuyers(target_time)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/workspace/IdleFramework/src/idleframework/optimizer/greedy.py", line 402, in _advance_with_autobuyers
+    self.engine._accumulate(rates, dt)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/workspace/IdleFramework/src/idleframework/engine/segments.py", line 1439, in _accumulate
+    self._accumulate_stock(dt)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^
+  File "/workspace/IdleFramework/src/idleframework/engine/segments.py", line 1469, in _accumulate_stock
+    new = self._stock.plan().state_at(dt)
+  File "/workspace/IdleFramework/src/idleframework/engine/stock_dynamics.py", line 142, in state_at
+    out = self._affine_state(t)
+  File "/workspace/IdleFramework/src/idleframework/engine/stock_dynamics.py", line 106, in _affine_state
+    xs = x0 + (a + k * x0) * _e1(k, t1)
+                             ~~~^^^^^^^
+  File "/workspace/IdleFramework/src/idleframework/engine/stock_dynamics.py", line 55, in _e1
+    return math.expm1(k * t) / k
+           ~~~~~~~~~~^^^^^^^
+OverflowError: math range error

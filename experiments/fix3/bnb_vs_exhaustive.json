@@ -1,0 +1,132 @@
+[
+ {
+  "config": "start",
+  "T": 600,
+  "depth": 3,
+  "exhaustive": 69.0,
+  "exhaustive_seq": [
+   "mine",
+   "smelter",
+   "bank"
+  ],
+  "exhaustive_nodes": 23,
+  "exhaustive_s": 0.04,
+  "sound": 69.0,
+  "sound_seq": [
+   "mine",
+   "smelter",
+   "bank"
+  ],
+  "sound_expanded": 6,
+  "sound_pruned": 0,
+  "sound_s": 0.06,
+  "legacy": 69.0,
+  "legacy_seq": [
+   "mine",
+   "smelter",
+   "bank"
+  ],
+  "legacy_expanded": 4,
+  "legacy_pruned": 2,
+  "legacy_s": 0.03
+ },
+ {
+  "config": "start",
+  "T": 600,
+  "depth": 4,
+  "exhaustive": 129.0,
+  "exhaustive_seq": [
+   "mine",
+   "smelter",
+   "bank",
+   "bank"
+  ],
+  "exhaustive_nodes": 104,
+  "exhaustive_s": 0.16,
+  "sound": 129.0,
+  "sound_seq": [
+   "mine",
+   "smelter",
+   "bank",
+   "bank"
+  ],
+  "sound_expanded": 23,
+  "sound_pruned": 0,
+  "sound_s": 0.17,
+  "legacy": 129.0,
+  "legacy_seq": [
+   "mine",
+   "smelter",
+   "bank",
+   "bank"
+  ],
+  "legacy_expanded": 8,
+  "legacy_pruned": 10,
+  "legacy_s": 0.08
+ },
+ {
+  "config": "rich",
+  "T": 600,
+  "depth": 3,
+  "exhaustive": 240.0,
+  "exhaustive_seq": [
+   "bank",
+   "bank",
+   "h_shop_2"
+  ],
+  "exhaustive_nodes": 407,
+  "exhaustive_s": 0.41,
+  "sound": 240.0,
+  "sound_seq": [
+   "bank",
+   "bank",
+   "h_shop_2"
+  ],
+  "sound_expanded": 53,
+  "sound_pruned": 0,
+  "sound_s": 0.45,
+  "legacy": 240.0,
+  "legacy_seq": [
+   "bank",
+   "bank",
+   "h_shop_2"
+  ],
+  "legacy_expanded": 10,
+  "legacy_pruned": 21,
+  "legacy_s": 0.11
+ },
+ {
+  "config": "rich",
+  "T": 600,
+  "depth": 4,
+  "exhaustive": 360.0,
+  "exhaustive_seq": [
+   "bank",
+   "bank",
+   "bank",
+   "h_shop_2"
+  ],
+  "exhaustive_nodes": 3224,
+  "exhaustive_s": 3.35,
+  "sound": 360.0,
+  "sound_seq": [
+   "bank",
+   "diamond_mine",
+   "bank",
+   "p_shop_bank"
+  ],
+  "sound_expanded": 407,
+  "sound_pruned": 0,
+  "sound_s": 3.64,
+  "legacy": 242.0,
+  "legacy_seq": [
+   "mine",
+   "bank",
+   "bank",
+   "h_shop_2"
+  ],
+  "legacy_expanded": 13,
+  "legacy_pruned": 31,
+  "legacy_s": 0.17
+ }
+]
