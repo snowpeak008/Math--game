@@ -523,6 +523,38 @@ class GreedyOptimizer:
         self.steps.extend(steps)
         return steps
 
+    def _multi_candidate(self, node) -> dict | None:
+        """Candidate dict for a multi-currency / gated item (fix3/2c).
+
+        ``cost`` is the effective cost in primary-currency units (binding
+        currency, see PiecewiseEngine._effective_cost), ``efficiency`` the same
+        payback score greedy uses, ``wait`` the max-over-currencies time to
+        afford (inf if never), ``price``/``requires`` the raw components.
+        """
+        eng = self.engine
+        price = eng._price(node.id)
+        if price is None:
+            return None
+        _, net = eng._compute_net_rates()
+        cost, bind = eng._effective_cost(node.id, price, net, ref=eng._get_primary_resource_id())
+        delta = self.simulated_delta(node.id)
+        eff = self._multi_payback_score(node.id, delta)
+        wait = eng._time_until_affordable(node.id, price, net)
+        if any(r <= 0 for _, _, _, r in eng._wait_parts(node.id, price, net)):
+            wait = None
+        return {
+            "node_id": node.id,
+            "type": "generator" if isinstance(node, Generator) else "upgrade",
+            "cost": cost,
+            "efficiency": eff,
+            "delta_production": delta,
+            "multi": True,
+            "wait": float("inf") if wait is None else wait,
+            "binding_currency": bind,
+            "price": price,
+            "requires": eng._requirements(node.id),
+        }
+
     def get_candidates(self) -> list[dict]:
         """Get all purchasable candidates with their efficiency metrics.
 
@@ -533,6 +565,13 @@ class GreedyOptimizer:
         gen_multipliers = self.engine._compute_generator_multipliers()
 
         for node in self.game.nodes:
+            if isinstance(node, (Generator, Upgrade)) and self._is_multi(node):
+                if isinstance(node, Generator) and node.id in self._active_autobuyer_targets():
+                    continue
+                c = self._multi_candidate(node)
+                if c is not None:
+                    candidates.append(c)
+                continue
             if isinstance(node, Generator):
                 if node.id in self._active_autobuyer_targets():
                     continue

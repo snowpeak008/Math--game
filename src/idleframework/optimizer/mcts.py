@@ -6,6 +6,8 @@ Uses epsilon-greedy rollout policy with UCB1 tree selection and average backup.
 from __future__ import annotations
 
 import copy
+
+from idleframework.optimizer._multi import wait_until_affordable
 import math
 import random
 from dataclasses import dataclass, field
@@ -72,7 +74,10 @@ class MCTSOptimizer:
             remaining_time = target_time - self._engine.time
             affordable = []
             for c in candidates:
-                if c["cost"] <= 0 or balance >= c["cost"] - 1e-10:
+                if c.get("multi"):
+                    if c["wait"] <= remaining_time:
+                        affordable.append(c)
+                elif c["cost"] <= 0 or balance >= c["cost"] - 1e-10:
                     affordable.append(c)
                 elif rate > 0:
                     wait = (c["cost"] - balance) / rate
@@ -94,7 +99,10 @@ class MCTSOptimizer:
             balance = self._engine.get_balance(pay_resource)
             rate = self._engine.get_production_rate(pay_resource)
 
-            if balance < cost - 1e-10:
+            if candidate.get("multi"):
+                if not wait_until_affordable(self._engine, best_id, target_time):
+                    break
+            elif balance < cost - 1e-10:
                 if rate <= 0:
                     break
                 wait = (cost - balance) / rate
@@ -242,6 +250,18 @@ class MCTSOptimizer:
         cost = candidate["cost"]
         balance = engine.get_balance(pay_resource)
         rate = engine.get_production_rate(pay_resource)
+
+        if candidate.get("multi"):
+            if not wait_until_affordable(engine, candidate["node_id"], target_time):
+                return False
+            try:
+                if candidate["type"] == "upgrade":
+                    engine.purchase_upgrade(candidate["node_id"])
+                else:
+                    engine.purchase(candidate["node_id"], 1)
+            except ValueError:
+                return False
+            return True
 
         if balance < cost - 1e-10:
             if rate <= 0:

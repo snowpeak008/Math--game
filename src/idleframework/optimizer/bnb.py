@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import copy
 
+from idleframework.optimizer._multi import wait_until_affordable
+
 from idleframework.engine.events import PurchaseEvent
 from idleframework.engine.segments import PiecewiseEngine
 from idleframework.optimizer.greedy import GreedyOptimizer, OptimizeResult
@@ -121,7 +123,10 @@ class BranchAndBoundOptimizer:
             balance = branch_engine.get_balance(self._pay_resource)
             rate = branch_engine.get_production_rate(self._pay_resource)
 
-            if balance < cost - 1e-10:
+            if candidate.get("multi"):
+                if not wait_until_affordable(branch_engine, candidate["node_id"], self._target_time):
+                    continue
+            elif balance < cost - 1e-10:
                 if rate <= 0:
                     continue
                 wait = (cost - balance) / rate
@@ -137,7 +142,7 @@ class BranchAndBoundOptimizer:
                         branch_engine.advance_to(nudge)
 
             final_balance = branch_engine.get_balance(self._pay_resource)
-            if final_balance < cost - 1e-10:
+            if not candidate.get("multi") and final_balance < cost - 1e-10:
                 continue
 
             try:

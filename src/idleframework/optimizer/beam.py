@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import copy
 
+from idleframework.optimizer._multi import wait_until_affordable
+
 from idleframework.engine.events import PurchaseEvent
 from idleframework.engine.segments import PiecewiseEngine
 from idleframework.optimizer.greedy import GreedyOptimizer, OptimizeResult
@@ -74,7 +76,10 @@ class BeamSearchOptimizer:
                     balance = branch_engine.get_balance(pay_resource)
                     rate = branch_engine.get_production_rate(pay_resource)
 
-                    if balance < cost - 1e-10:
+                    if candidate.get("multi"):
+                        if not wait_until_affordable(branch_engine, node_id, target_time):
+                            continue
+                    elif balance < cost - 1e-10:
                         if rate <= 0:
                             continue
                         wait = (cost - balance) / rate
