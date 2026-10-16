@@ -1,0 +1,1770 @@
+{
+ "summary": {
+  "shadow": {
+   "same_seq": 3,
+   "optimal": 19,
+   "Z_before_U": 0,
+   "n": 30
+  },
+  "legacy": {
+   "same_seq": 0,
+   "optimal": 1,
+   "Z_before_U": 15,
+   "n": 30
+  }
+ },
+ "rows": [
+  {
+   "T": 100.0,
+   "thr": 20,
+   "zc": 10,
+   "shadow": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     307.02688
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": true
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "Z",
+     "U",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     55.713333
+    ],
+    "Z_before_U": true,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "g1",
+     "hgen",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     331.20088
+    ]
+   }
+  },
+  {
+   "T": 100.0,
+   "thr": 20,
+   "zc": 20,
+   "shadow": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     307.02688
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": true
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "g1"
+    ],
+    "score": [
+     12.0,
+     39.786667
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "g1",
+     "hgen",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     331.20088
+    ]
+   }
+  },
+  {
+   "T": 100.0,
+   "thr": 30,
+   "zc": 10,
+   "shadow": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "Z",
+     "g1"
+    ],
+    "score": [
+     15.6,
+     42.106667
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "Z",
+     "U",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     55.713333
+    ],
+    "Z_before_U": true,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     132.24688
+    ]
+   }
+  },
+  {
+   "T": 100.0,
+   "thr": 30,
+   "zc": 20,
+   "shadow": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "Z",
+     "g1"
+    ],
+    "score": [
+     15.6,
+     42.106667
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "g1"
+    ],
+    "score": [
+     12.0,
+     39.786667
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     215.063333
+    ]
+   }
+  },
+  {
+   "T": 100.0,
+   "thr": 50,
+   "zc": 10,
+   "shadow": {
+    "seq": [
+     "g1",
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "Z"
+    ],
+    "score": [
+     15.6,
+     30.917333
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": true
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "Z",
+     "g1"
+    ],
+    "score": [
+     5.2,
+     133.626667
+    ],
+    "Z_before_U": true,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "g1",
+     "hgen",
+     "hgen",
+     "g1",
+     "U",
+     "Z"
+    ],
+    "score": [
+     15.6,
+     58.222667
+    ]
+   }
+  },
+  {
+   "T": 100.0,
+   "thr": 50,
+   "zc": 20,
+   "shadow": {
+    "seq": [
+     "g1",
+     "g1",
+     "g1",
+     "hgen",
+     "g1"
+    ],
+    "score": [
+     5.0,
+     180.813333
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "g1"
+    ],
+    "score": [
+     12.0,
+     37.653333
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": true
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "g1",
+     "hgen",
+     "hgen",
+     "g1",
+     "U"
+    ],
+    "score": [
+     12.0,
+     59.786667
+    ]
+   }
+  },
+  {
+   "T": 150.0,
+   "thr": 20,
+   "zc": 10,
+   "shadow": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     1243.02688
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": true
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "Z",
+     "U",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     1030.713333
+    ],
+    "Z_before_U": true,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "g1",
+     "hgen",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     1501.20088
+    ]
+   }
+  },
+  {
+   "T": 150.0,
+   "thr": 20,
+   "zc": 20,
+   "shadow": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     1243.02688
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": true
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "g1",
+     "g1",
+     "hgen"
+    ],
+    "score": [
+     15.0,
+     537.813333
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "g1",
+     "hgen",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     1501.20088
+    ]
+   }
+  },
+  {
+   "T": 150.0,
+   "thr": 30,
+   "zc": 10,
+   "shadow": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     1302.24688
+    ],
+    "Z_before_U": false,
+    "same_seq": true,
+    "optimal": true
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "Z",
+     "U",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     1030.713333
+    ],
+    "Z_before_U": true,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     1302.24688
+    ]
+   }
+  },
+  {
+   "T": 150.0,
+   "thr": 30,
+   "zc": 20,
+   "shadow": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     1302.24688
+    ],
+    "Z_before_U": false,
+    "same_seq": true,
+    "optimal": true
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "g1",
+     "g1",
+     "hgen"
+    ],
+    "score": [
+     15.0,
+     537.813333
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     1302.24688
+    ]
+   }
+  },
+  {
+   "T": 150.0,
+   "thr": 50,
+   "zc": 10,
+   "shadow": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     942.246667
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "Z",
+     "g1",
+     "U",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     903.913333
+    ],
+    "Z_before_U": true,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "g1",
+     "g1",
+     "g1",
+     "U",
+     "Z"
+    ],
+    "score": [
+     23.4,
+     708.14688
+    ]
+   }
+  },
+  {
+   "T": 150.0,
+   "thr": 50,
+   "zc": 20,
+   "shadow": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     942.246667
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "g1",
+     "g1",
+     "hgen"
+    ],
+    "score": [
+     15.0,
+     535.146667
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "g1",
+     "g1",
+     "g1",
+     "U",
+     "Z"
+    ],
+    "score": [
+     23.4,
+     708.14688
+    ]
+   }
+  },
+  {
+   "T": 200.0,
+   "thr": 20,
+   "zc": 10,
+   "shadow": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     2413.02688
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": true
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "Z",
+     "U",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     2005.713333
+    ],
+    "Z_before_U": true,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "g1",
+     "hgen",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     2671.20088
+    ]
+   }
+  },
+  {
+   "T": 200.0,
+   "thr": 20,
+   "zc": 20,
+   "shadow": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     2413.02688
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": true
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "g1",
+     "g1",
+     "hgen"
+    ],
+    "score": [
+     15.0,
+     1287.813333
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "g1",
+     "hgen",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     2671.20088
+    ]
+   }
+  },
+  {
+   "T": 200.0,
+   "thr": 30,
+   "zc": 10,
+   "shadow": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     2413.02688
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": true
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "Z",
+     "U",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     2005.713333
+    ],
+    "Z_before_U": true,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     2472.24688
+    ]
+   }
+  },
+  {
+   "T": 200.0,
+   "thr": 30,
+   "zc": 20,
+   "shadow": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     2472.24688
+    ],
+    "Z_before_U": false,
+    "same_seq": true,
+    "optimal": true
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "g1",
+     "g1",
+     "hgen"
+    ],
+    "score": [
+     15.0,
+     1287.813333
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     2472.24688
+    ]
+   }
+  },
+  {
+   "T": 200.0,
+   "thr": 50,
+   "zc": 10,
+   "shadow": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "g1",
+     "hgen",
+     "U",
+     "Z",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     1934.526667
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "Z",
+     "g1",
+     "U",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     1878.913333
+    ],
+    "Z_before_U": true,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "g1",
+     "g1",
+     "g1",
+     "U",
+     "Z"
+    ],
+    "score": [
+     23.4,
+     1878.14688
+    ]
+   }
+  },
+  {
+   "T": 200.0,
+   "thr": 50,
+   "zc": 20,
+   "shadow": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "g1",
+     "hgen",
+     "U",
+     "Z",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     1934.526667
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "g1",
+     "g1",
+     "hgen"
+    ],
+    "score": [
+     15.0,
+     1285.146667
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "g1",
+     "g1",
+     "g1",
+     "U",
+     "Z"
+    ],
+    "score": [
+     23.4,
+     1878.14688
+    ]
+   }
+  },
+  {
+   "T": 250.0,
+   "thr": 20,
+   "zc": 10,
+   "shadow": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     3583.02688
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": true
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "Z",
+     "U",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     2980.713333
+    ],
+    "Z_before_U": true,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "g1",
+     "hgen",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     3841.20088
+    ]
+   }
+  },
+  {
+   "T": 250.0,
+   "thr": 20,
+   "zc": 20,
+   "shadow": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     3583.02688
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": true
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "g1",
+     "g1",
+     "hgen"
+    ],
+    "score": [
+     15.0,
+     2037.813333
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "g1",
+     "hgen",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     3841.20088
+    ]
+   }
+  },
+  {
+   "T": 250.0,
+   "thr": 30,
+   "zc": 10,
+   "shadow": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     3583.02688
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": true
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "Z",
+     "U",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     2980.713333
+    ],
+    "Z_before_U": true,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     3642.24688
+    ]
+   }
+  },
+  {
+   "T": 250.0,
+   "thr": 30,
+   "zc": 20,
+   "shadow": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     3583.02688
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": true
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "g1",
+     "g1",
+     "hgen"
+    ],
+    "score": [
+     15.0,
+     2037.813333
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     3642.24688
+    ]
+   }
+  },
+  {
+   "T": 250.0,
+   "thr": 50,
+   "zc": 10,
+   "shadow": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "g1",
+     "hgen",
+     "U",
+     "Z",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     2909.526667
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "Z",
+     "g1",
+     "U",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     2853.913333
+    ],
+    "Z_before_U": true,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "g1",
+     "g1",
+     "g1",
+     "U",
+     "Z"
+    ],
+    "score": [
+     23.4,
+     3048.14688
+    ]
+   }
+  },
+  {
+   "T": 250.0,
+   "thr": 50,
+   "zc": 20,
+   "shadow": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "g1",
+     "hgen",
+     "U",
+     "Z",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     2909.526667
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "g1",
+     "g1",
+     "hgen"
+    ],
+    "score": [
+     15.0,
+     2035.146667
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "g1",
+     "g1",
+     "g1",
+     "U",
+     "Z"
+    ],
+    "score": [
+     23.4,
+     3048.14688
+    ]
+   }
+  },
+  {
+   "T": 300.0,
+   "thr": 20,
+   "zc": 10,
+   "shadow": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     4753.02688
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": true
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "Z",
+     "U",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     3955.713333
+    ],
+    "Z_before_U": true,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "g1",
+     "hgen",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     5011.20088
+    ]
+   }
+  },
+  {
+   "T": 300.0,
+   "thr": 20,
+   "zc": 20,
+   "shadow": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     4753.02688
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": true
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "g1",
+     "g1",
+     "hgen"
+    ],
+    "score": [
+     15.0,
+     2787.813333
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "g1",
+     "hgen",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     5011.20088
+    ]
+   }
+  },
+  {
+   "T": 300.0,
+   "thr": 30,
+   "zc": 10,
+   "shadow": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     4753.02688
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": true
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "Z",
+     "U",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     3955.713333
+    ],
+    "Z_before_U": true,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     4812.24688
+    ]
+   }
+  },
+  {
+   "T": 300.0,
+   "thr": 30,
+   "zc": 20,
+   "shadow": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     4753.02688
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": true
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "g1",
+     "g1",
+     "hgen"
+    ],
+    "score": [
+     15.0,
+     2787.813333
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "g1",
+     "U",
+     "Z",
+     "g1",
+     "g1"
+    ],
+    "score": [
+     23.4,
+     4812.24688
+    ]
+   }
+  },
+  {
+   "T": 300.0,
+   "thr": 50,
+   "zc": 10,
+   "shadow": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "g1",
+     "hgen",
+     "U",
+     "Z",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     3884.526667
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "Z",
+     "g1",
+     "U",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     3828.913333
+    ],
+    "Z_before_U": true,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "g1",
+     "g1",
+     "g1",
+     "U",
+     "Z"
+    ],
+    "score": [
+     23.4,
+     4218.14688
+    ]
+   }
+  },
+  {
+   "T": 300.0,
+   "thr": 50,
+   "zc": 20,
+   "shadow": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "g1",
+     "hgen",
+     "U",
+     "Z",
+     "g1"
+    ],
+    "score": [
+     19.5,
+     3884.526667
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "legacy": {
+    "seq": [
+     "g1",
+     "hgen",
+     "g1",
+     "hgen",
+     "U",
+     "g1",
+     "g1",
+     "hgen"
+    ],
+    "score": [
+     15.0,
+     2785.146667
+    ],
+    "Z_before_U": false,
+    "same_seq": false,
+    "optimal": false
+   },
+   "exhaustive": {
+    "seq": [
+     "hgen",
+     "g1",
+     "g1",
+     "g1",
+     "g1",
+     "g1",
+     "U",
+     "Z"
+    ],
+    "score": [
+     23.4,
+     4218.14688
+    ]
+   }
+  }
+ ]
+}

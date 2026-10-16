@@ -135,9 +135,18 @@ def test_bnb_sound_bound_equals_exhaustive():
     e.auto_purchase = False
     ex = bx.exhaustive(e, 600, 4)
     sound = BranchAndBoundOptimizer(bx.start(bal), 4, bound="sound").optimize(600, 40)
-    legacy = BranchAndBoundOptimizer(bx.start(bal), 4, bound="legacy").optimize(600, 40)
     assert sound.final_production == pytest.approx(ex["best"])
-    assert legacy.final_production < ex["best"]  # documents the old invalid bound
+    # documents the old invalid bound (v0.1.5 finding, under the v0.1.6
+    # valuation it was found with; candidate order depends on valuation)
+    PiecewiseEngine.valuation = "legacy"
+    try:
+        e = bx.start(bal)
+        e.auto_purchase = False
+        ex_l = bx.exhaustive(e, 600, 4)
+        legacy = BranchAndBoundOptimizer(bx.start(bal), 4, bound="legacy").optimize(600, 40)
+    finally:
+        PiecewiseEngine.valuation = "shadow"
+    assert legacy.final_production < ex_l["best"]
 
 
 def test_binding_currency_includes_requires():
@@ -158,8 +167,10 @@ def test_binding_currency_includes_requires():
 def test_beam_rollout_never_below_greedy():
     """v0.1.6: rollout-ranked beam returns >= greedy (root completion = greedy)."""
     g = _game()
-    greedy = GreedyOptimizer(g).optimize(600, max_steps=200).final_production
-    w1 = BeamSearchOptimizer(PiecewiseEngine(g), 1).optimize(600, 200).final_production
-    w2 = BeamSearchOptimizer(PiecewiseEngine(g), 2, branch_steps=8).optimize(600, 200).final_production
+    # v0.1.7: shadow valuation makes ~240 purchases by T=600, so use step
+    # budgets that do not truncate (a truncated greedy is not the root rollout).
+    greedy = GreedyOptimizer(g).optimize(600, max_steps=1000).final_production
+    w1 = BeamSearchOptimizer(PiecewiseEngine(g), 1).optimize(600, 1000).final_production
+    w2 = BeamSearchOptimizer(PiecewiseEngine(g), 2, branch_steps=8).optimize(600, 1000).final_production
     assert w1 == pytest.approx(greedy)
     assert w2 >= greedy - 1e-9

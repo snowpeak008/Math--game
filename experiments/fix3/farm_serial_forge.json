@@ -1,0 +1,62 @@
+[
+ {
+  "forge_mult": 3.0,
+  "opt": "greedy",
+  "final_production": 1520460.0,
+  "baseline": 451620.0,
+  "gain": 3.3667,
+  "trainer": 45,
+  "forge_bought": true,
+  "wall_s": 0.3
+ },
+ {
+  "forge_mult": 3.0,
+  "opt": "beam(w3)",
+  "final_production": 1520460.0,
+  "baseline": 451620.0,
+  "gain": 3.3667,
+  "trainer": 45,
+  "forge_bought": true,
+  "wall_s": 73.5
+ },
+ {
+  "forge_mult": 1.5,
+  "opt": "greedy",
+  "final_production": 696600.0,
+  "baseline": 451620.0,
+  "gain": 1.5424,
+  "trainer": 52,
+  "forge_bought": true,
+  "wall_s": 0.2
+ },
+ {
+  "forge_mult": 1.5,
+  "opt": "beam(w3)",
+  "final_production": 696600.0,
+  "baseline": 451620.0,
+  "gain": 1.5424,
+  "trainer": 52,
+  "forge_bought": true,
+  "wall_s": 72.2
+ },
+ {
+  "forge_mult": 1.0,
+  "opt": "greedy",
+  "final_production": 427200.0,
+  "baseline": 451620.0,
+  "gain": 0.9459,
+  "trainer": 76,
+  "forge_bought": false,
+  "wall_s": 0.2
+ },
+ {
+  "forge_mult": 1.0,
+  "opt": "beam(w3)",
+  "final_production": 427200.0,
+  "baseline": 451620.0,
+  "gain": 0.9459,
+  "trainer": 76,
+  "forge_bought": false,
+  "wall_s": 71.6
+ }
+]

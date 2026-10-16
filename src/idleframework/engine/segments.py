@@ -13,6 +13,7 @@ from collections import OrderedDict
 
 import contextlib
 import math
+import sys
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
@@ -227,15 +228,85 @@ class PiecewiseEngine:
         self._state.get(node_id).owned = count
 
     def get_balance(self, resource_id: str) -> float:
-        """Get the current balance of a resource."""
+        """Get the current balance of a resource.
+
+        A stock in log mode (beyond float, v0.1.7) returns its value saturated
+        at sys.float_info.max; use get_balance_ln / get_balance_big for it.
+        """
+        if resource_id in self._ln_bal:
+            return self._balance(resource_id)
         return self._state.get(resource_id).current_value
+
+    def get_balance_ln(self, resource_id: str) -> float:
+        """ln of the balance (exact for log-mode stocks; -inf at 0)."""
+        if resource_id in self._ln_bal:
+            return self._ln_bal[resource_id]
+        v = self._state.get(resource_id).current_value
+        return math.log(v) if v > 0 else -math.inf
+
+    def get_balance_big(self, resource_id: str):
+        """Balance as a BigFloat (any magnitude)."""
+        from idleframework.bigfloat import BigFloat
+        from idleframework.engine.stock_dynamics import ln_to_bigfloat
+
+        if resource_id in self._ln_bal:
+            return ln_to_bigfloat(self._ln_bal[resource_id])
+        return BigFloat(self._state.get(resource_id).current_value)
+
+    @property
+    def _ln_bal(self) -> dict[str, float]:
+        return self._state.ln_balances
+
+    @property
+    def log_mode(self) -> bool:
+        return bool(self._ln_bal)
+
+    def production_rate_ln(self, resource_id: str) -> float | None:
+        """ln of the net rate of a resource, valid in log mode (rates are
+        affine in the log-mode stock: a + k x with x = e^ln)."""
+        _, net = self._compute_net_rates()
+        if not self._ln_bal:
+            r = net.get(resource_id, 0.0)
+            return math.log(r) if r > 0 else None
+        plan = self._stock.plan()
+        if plan.affine is None:
+            return None
+        s, coef = plan.affine
+        a, k = coef.get(resource_id, (net.get(resource_id, 0.0), 0.0))
+        if k <= 0:
+            return math.log(a) if a > 0 else None
+        ln = self._ln_bal[s]
+        return ln + math.log(k) + math.log1p((a / k) * math.exp(-ln))
+
+    def _spend(self, cid: str, amount: float) -> None:
+        st = self._state.get(cid)
+        if cid in self._ln_bal:
+            from idleframework.engine.stock_dynamics import LN_PROXY
+
+            ln = self._ln_bal[cid]
+            frac = amount * math.exp(-ln)
+            ln = ln + math.log1p(-min(frac, 1.0)) if frac < 1.0 else -math.inf
+            if ln > LN_PROXY:
+                self._ln_bal[cid] = ln
+            else:
+                del self._state.ln_balances[cid]
+                st.current_value = math.exp(ln) if ln > -math.inf else 0.0
+            return
+        st.current_value = 0.0 if st.current_value < amount else st.current_value - amount
 
     def get_owned(self, node_id: str) -> int:
         """Get how many of a node are owned."""
         return self._state.get(node_id).owned
 
     def get_production_rate(self, resource_id: str) -> float:
-        """Get current production rate for a single resource."""
+        """Get current production rate for a single resource.
+
+        In log mode (v0.1.7) the rate is a + k*x with x beyond float: it is
+        returned saturated at sys.float_info.max (see production_rate_ln)."""
+        if self._ln_bal:
+            ln = self.production_rate_ln(resource_id)
+            if ln is not None:
+                return math.exp(ln) if ln < 709.78 else sys.float_info.max
         return self.compute_production_rates().get(resource_id, 0.0)
 
     def is_upgrade_owned(self, upgrade_id: str) -> bool:
@@ -729,6 +800,9 @@ class PiecewiseEngine:
     def _balance(self, cid: str) -> float:
         if not cid:
             return float("inf")  # no currency resource: free
+        if cid in self._ln_bal:  # log mode: compare in ln, saturate at float max
+            ln = self._ln_bal[cid]
+            return math.exp(ln) if ln < 709.78 else sys.float_info.max
         return self._state.get(cid).current_value
 
     def _affordable_now(self, node_id: str, price=None) -> bool:
@@ -786,6 +860,12 @@ class PiecewiseEngine:
             worst = max(worst, t)
         return worst
 
+    # v0.1.7: "shadow" (default) values multi-currency items with shadow
+    # prices (engine/shadow.py); "legacy" keeps the v0.1.6 income-ratio /
+    # power heuristic.
+    valuation: str = "shadow"
+    valuation_target: float | None = None  # absolute end time for threshold values
+
     def _effective_cost(
         self, node_id: str, price, net_rates, ref: str | None = None
     ) -> tuple[float, str | None]:
@@ -808,6 +888,10 @@ class PiecewiseEngine:
             return a / r if r > 0 else float("inf")
 
         bind = max(comps, key=earn_time)
+        if self.valuation == "shadow" and ref is not None:
+            from idleframework.engine import shadow
+
+            return shadow.effective_cost(self, node_id, comps, net_rates), bind[0]
         ref_id = ref if ref is not None else comps[0][0]
         if bind[0] == ref_id:
             return bind[1], bind[0]
@@ -871,6 +955,7 @@ class PiecewiseEngine:
         st = self._state
         return (
             self._time,
+            tuple(sorted(self._ln_bal.items())),
             tuple(
                 (k, v.owned, v.purchased, v.current_value, v.active, v.level, v.last_fired)
                 for k, v in sorted(st.node_states.items())
@@ -977,9 +1062,10 @@ class PiecewiseEngine:
             out.update(c for c, _ in self._requirements(n.id))
         # A farm's power resource is needed when its material is (power only
         # gates the farmed stage, so no price mentions it).
-        for f in self._farms:
-            if f.material in out:
-                out.add(f.power_resource)
+        if self.valuation != "shadow":
+            for f in self._farms:
+                if f.material in out:
+                    out.add(f.power_resource)
         return out
 
     def _valued_delta(self, node) -> float:
@@ -1007,8 +1093,21 @@ class PiecewiseEngine:
                 after = self.compute_production_rates()
             finally:
                 ns.purchased = False
-        needed = self._needed_currencies()
         r_p = before.get(p, 0.0)
+        if self.valuation == "shadow":
+            from idleframework.engine import shadow
+
+            total = 0.0
+            for c in set(before) | set(after):
+                d = after.get(c, 0.0) - before.get(c, 0.0)
+                if d == 0:
+                    continue
+                if c == p:
+                    total += d
+                elif not any(f.power_resource == c for f in self._farms):
+                    total += d * shadow.weight(self, c, before.get(c, 0.0), d, r_p)
+            return total + shadow.power_value(self, before, after, r_p)
+        needed = self._needed_currencies()
         total = 0.0
         for c in set(before) | set(after):
             d = after.get(c, 0.0) - before.get(c, 0.0)
@@ -1209,7 +1308,7 @@ class PiecewiseEngine:
         for cid, cost in price:
             if not cid or cost <= 0:
                 continue
-            balance = self._state.get(cid).current_value
+            balance = self._balance(cid)
             tol = max(1e-4, abs(cost) * 1e-9)
             if balance < cost - tol:
                 verb = "Insufficient balance to purchase" if isinstance(node, Generator) else "Cannot afford upgrade"
@@ -1219,9 +1318,8 @@ class PiecewiseEngine:
             total_cost += cost
             if not cid or cost <= 0:
                 continue
-            st = self._state.get(cid)
-            # Clamp: if within tolerance, treat as exact
-            st.current_value = 0.0 if st.current_value < cost else st.current_value - cost
+            # Clamp: if within tolerance, treat as exact (log mode: ln update)
+            self._spend(cid, cost)
             if self._last_segment is not None:
                 sp = self._last_segment.spent
                 sp[cid] = sp.get(cid, 0.0) + cost
@@ -1352,7 +1450,7 @@ class PiecewiseEngine:
                 )
                 if ok:
                     for c, a in comps:
-                        self._state.get(c).current_value -= a
+                        self._spend(c, a)
                     ns = self._state.get(node.id)
                     if isinstance(node, Generator):
                         ns.owned += 1
@@ -1587,7 +1685,9 @@ class PiecewiseEngine:
 
     def _accumulate_stock(self, dt: float) -> None:
         """Advance balances along the solved stock-linked trajectory."""
-        new = self._stock.plan().state_at(dt)
+        plan = self._stock.plan()
+        new = plan.state_at(dt)
+        self._state.ln_balances = dict(plan.ln_out)
         for rid, v in new.items():
             ns = self._state.get(rid)
             gain = v - ns.current_value
@@ -1604,7 +1704,7 @@ class PiecewiseEngine:
         if price is None:
             return
         for cid, cost in list(price) + self._requirements(node_id):
-            if not cid:
+            if not cid or cid in self._ln_bal:
                 continue
             st = self._state.get(cid)
             if st.current_value < cost and st.current_value >= cost * (1 - 1e-6) - 1e-6:

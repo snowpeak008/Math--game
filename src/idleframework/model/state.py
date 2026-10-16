@@ -30,6 +30,9 @@ class GameState(BaseModel):
     run_time: float = 0.0
     lifetime_earnings: dict[str, float] = Field(default_factory=dict)
     layer_run_times: dict[str, float] = Field(default_factory=dict)
+    # v0.1.7: ln balance of stock resources beyond float range (log mode);
+    # their current_value slot then holds stock_dynamics.PROXY.
+    ln_balances: dict[str, float] = Field(default_factory=dict)
 
     @classmethod
     def from_game(cls, game: GameDefinition) -> GameState:

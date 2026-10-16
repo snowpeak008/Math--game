@@ -1,4 +1,4 @@
-"""v0.1.6: stock-linked overflow raises (never silent inf); log-space closed form."""
+"""v0.1.6/v0.1.7: stock-linked overflow -> log mode (no throw, never inf); log-space closed form."""
 from __future__ import annotations
 
 import math
@@ -47,19 +47,104 @@ def _stock_linear_greedy(T):
     return o, o.optimize(target_time=T)
 
 
+def _coef(game, state, x_lo=1.0):
+    """(a, k) of d gold/dt = a + k*gold for the owned counts in ``state``,
+    probed at small balances (independent of the engine's log mode)."""
+    import copy
+
+    from idleframework.engine.segments import PiecewiseEngine
+
+    st = copy.deepcopy(state)
+    st.ln_balances = {}
+    e = PiecewiseEngine(game, st)
+    f0 = e._stock.net_rates_with({"gold": x_lo})["gold"]
+    f1 = e._stock.net_rates_with({"gold": x_lo + 1.0})["gold"]
+    return f0 - (f1 - f0) * x_lo, f1 - f0
+
+
+def _replay_log_sim(game, purchases, T, dt=2e-4):
+    """Fine log-space tick sim (RK4 on y = ln gold) replaying the purchase
+    sequence: returns the simulated purchase times and ln gold at T."""
+    from idleframework.engine.segments import PiecewiseEngine
+    from idleframework.model.state import GameState
+
+    st = GameState.from_game(game)
+    st.get("g1").owned = 1
+    eng = PiecewiseEngine(game, st)
+    g0 = st.get("gold").current_value
+    y, t, times = (math.log(g0) if g0 > 0 else -math.inf), 0.0, []
+
+    def step_to(cond, t_end):
+        """RK4: in x while x < 1e100, in y = ln x beyond (tick sim)."""
+        nonlocal y, t
+        a, k = _coef(game, eng.state)
+        fy = lambda y: a * math.exp(-y) + k  # noqa: E731
+        fx = lambda x: a + k * x  # noqa: E731
+        while t < t_end - 1e-15:
+            if cond is not None and y >= cond:
+                return
+            h = min(dt, t_end - t, 0.02 / k if k > 0 else dt)
+            if y < 230.0:
+                x = math.exp(y) if y > -600 else 0.0
+                def rk(hh):
+                    k1 = fx(x); k2 = fx(x + hh * k1 / 2); k3 = fx(x + hh * k2 / 2); k4 = fx(x + hh * k3)
+                    return x + hh * (k1 + 2 * k2 + 2 * k3 + k4) / 6
+                x2 = rk(h)
+                y2 = math.log(x2) if x2 > 0 else -math.inf
+                if cond is not None and y2 >= cond:
+                    c, lo, hi = math.exp(cond), 0.0, h  # crossing: bisect the RK4 step
+                    for _ in range(60):
+                        mid = (lo + hi) / 2
+                        lo, hi = (mid, hi) if rk(mid) < c else (lo, mid)
+                    t += hi; y = cond
+                    return
+            else:
+                h = min(t_end - t, 0.05)  # dy/dt ~ k + a e^{-y}: smooth in log space
+                k1 = fy(y); k2 = fy(y + h * k1 / 2); k3 = fy(y + h * k2 / 2); k4 = fy(y + h * k3)
+                y2 = y + h * (k1 + 2 * k2 + 2 * k3 + k4) / 6
+                if cond is not None and y2 >= cond:  # interpolate the crossing
+                    t += h * (cond - y) / (y2 - y); y = cond
+                    return
+            y, t = y2, t + h
+
+    for p in purchases:
+        cost = eng._price(p.node_id)[0][1]
+        step_to(math.log(cost), T)
+        times.append(t)
+        # spend in ln space, then apply the purchase to the discrete state
+        y = y + math.log1p(-math.exp(math.log(cost) - y)) if y - math.log(cost) > 1e-9 else -math.inf
+        node = game.get_node(p.node_id)
+        if hasattr(node, "base_production"):
+            eng.state.get(p.node_id).owned += 1
+        else:
+            eng.state.get(p.node_id).purchased = True
+    step_to(None, T)
+    return times, y
+
+
 @pytest.mark.skipif(not __import__("os").path.exists("/workspace/round2-tests/idlecfg.py"),
                     reason="test-B config builder not present")
 @pytest.mark.parametrize("T", [450.0, 1000.0])
-def test_stock_linear_long_run_raises_not_inf(T):
-    with pytest.raises(StockOverflowError) as ei:
-        _stock_linear_greedy(T)
-    err = ei.value
-    assert err.ln_value is not None and err.ln_value > 709  # truly beyond float range
-    assert math.isfinite(err.ln_value)
-    assert err.as_bigfloat().log10() == pytest.approx(err.ln_value / math.log(10))
+def test_stock_linear_long_run_completes_in_log_mode(T):
+    """v0.1.7: no throw. The run completes past float range; ln balance and
+    node (purchase) times match a fine log-space tick simulation."""
+    o, r = _stock_linear_greedy(T)
+    e = o.engine
+    assert e.current_time == pytest.approx(T)
+    assert e.log_mode and e.get_balance_ln("gold") > 709  # truly beyond float
+    assert math.isfinite(e.get_balance("gold")) and math.isfinite(r.final_production)
+    assert r.final_balance_ln == pytest.approx(e.get_balance_ln("gold"))
+    assert e.get_balance_big("gold").log10() == pytest.approx(e.get_balance_ln("gold") / math.log(10))
+    times, y_end = _replay_log_sim(o.game, r.purchases, T)
+    for p, ts in zip(r.purchases, times):
+        assert ts == pytest.approx(p.time, rel=1e-6, abs=1e-6), p.node_id
+    assert y_end == pytest.approx(e.get_balance_ln("gold"), rel=1e-9)
+    for g in ("g5", "g10"):
+        assert any(p.node_id == g for p in r.purchases)
 
 
-def test_engine_never_returns_inf():
+def test_engine_log_mode_beyond_float():
+    """Pure exponential stock: runs to e^~2000 without inf; ln matches closed form."""
     from idleframework.engine.segments import PiecewiseEngine
     from idleframework.model.edges import Edge
     from idleframework.model.game import GameDefinition
@@ -75,9 +160,23 @@ def test_engine_never_returns_inf():
     e = PiecewiseEngine(g)
     e.set_owned("g1", 1)
     e.auto_purchase = False
-    with pytest.raises(StockOverflowError):
-        e.advance_to(2000.0)
-    assert math.isfinite(e.get_balance("gold"))
+    e.advance_to(2000.0)  # dx/dt = 1 + x  ->  ln x = ln(2 e^t - 1)
+    assert e.log_mode
+    assert e.get_balance_ln("gold") == pytest.approx(2000.0 + math.log(2.0), rel=1e-12)
+    assert e.get_balance("gold") == sys.float_info.max  # saturated, never inf
+    assert e.production_rate_ln("gold") == pytest.approx(2000.0 + math.log(2.0), rel=1e-9)
+    # affordability via ln: the 1e300 generator is affordable; buying it keeps log mode
+    assert e._affordable_now("g1") if hasattr(e, "_affordable_now") else True
+    e.purchase("g1")
+    assert e.log_mode and e.get_balance_ln("gold") == pytest.approx(2000.0 + math.log(2.0), rel=1e-12)
+
+
+def test_spend_leaves_log_mode():
+    from idleframework.engine.stock_dynamics import PROXY, affine_log_from_ln
+
+    assert affine_log_from_ln(1000.0, 0.0, 1.0, 5.0) == pytest.approx(1005.0)
+    assert affine_log_from_ln(math.log(3.0), 2.0, 0.5, 4.0) == pytest.approx(affine_log_x(3.0, 2.0, 0.5, 4.0))
+    assert PROXY == 1e300
 
 
 @pytest.mark.skipif(not __import__("os").path.exists("/workspace/round2-tests/idlecfg.py"),

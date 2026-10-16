@@ -34,12 +34,18 @@ if TYPE_CHECKING:
 AFFINE_RTOL = 1e-9
 # Largest k*t for which e^{kt} is formed in float; beyond it only log space.
 _KT_FLOAT_MAX = 700.0
+# v0.1.7 log mode: a stock balance above LN_PROXY is held as ln x (engine._ln_bal)
+# while its float slot carries PROXY (formulas are evaluated there; rates are
+# affine in x, so true rates follow from the probed coefficients).
+PROXY = 1e300
+LN_PROXY = math.log(PROXY)
 
 
 class StockOverflowError(OverflowError):
-    """A stock-linked balance left the float range (v0.1.6).
-
-    Raised instead of silently returning inf. ``ln_value`` is ln x(t) from the
+    """A stock-linked balance cannot be represented (v0.1.7: only when ln x
+    itself overflows, or in unsupported cases: non-affine dynamics, or a second
+    balance integrating a log-mode stock). Beyond-float affine stocks are held
+    in log mode instead (engine._ln_bal). ``ln_value`` is ln x(t) from the
     log-space closed form (None when unavailable, e.g. ODE case);
     ``as_bigfloat()`` gives the value as a BigFloat.
     """
@@ -81,6 +87,16 @@ def affine_log_x(x0: float, a: float, k: float, t: float) -> float:
     return math.log(x)
 
 
+def affine_log_from_ln(ln_x0: float, a: float, k: float, t: float) -> float:
+    """ln x(t) for dx/dt = a + k x given ln x0 (x0 may exceed float range)."""
+    if k <= 0:
+        x0 = math.exp(min(ln_x0, 709.0))
+        return math.log(max(x0 + a * t, 1e-300)) if ln_x0 < 709.0 else ln_x0  # a*t negligible
+    c = (a / k) * math.exp(-ln_x0)  # (a/k)/x0
+    ln_c = ln_x0 + math.log1p(c)  # ln(x0 + a/k)
+    return k * t + ln_c + math.log1p(-(a / k) * math.exp(-(k * t + ln_c)))
+
+
 def stock_resources(game) -> set[str]:
     """Resource ids whose balance appears in a SynergyNode formula."""
     from idleframework.engine.variables import sanitize_var_name
@@ -119,6 +135,8 @@ class _Plan:
         self.ids = dyn.resource_ids
         self.x0 = {r: eng._state.get(r).current_value for r in self.ids}
         self.cap = dyn.capacity
+        self.ln0 = dict(eng._ln_bal)  # stocks in log mode
+        self.ln_out: dict[str, float] = {}  # set by state_at for stocks ending in log mode
         self.affine = None  # (s, {r: (a_r, k_r)})
         stocks = [s for s in dyn.stocks if s in self.x0]
         if len(stocks) == 1:
@@ -126,7 +144,7 @@ class _Plan:
 
     # -- affine -------------------------------------------------------------
     def _probe_affine(self, s: str):
-        x0 = self.x0[s]
+        x0 = 1.0 if s in self.ln0 else self.x0[s]  # affine: probe anywhere
         h = max(1.0, abs(x0))
         pts = [x0, x0 + h, x0 + 3.0 * h]
         vals = [self.dyn.net_rates_with({s: p}) for p in pts]
@@ -150,12 +168,32 @@ class _Plan:
         if cap is not None and x0 < cap:
             t_cap = self._affine_reach_s(cap)
         t1 = t if t_cap is None else min(t, t_cap)
-        if k * t1 > _KT_FLOAT_MAX:
+        ln = None
+        if s in self.ln0:
+            ln = affine_log_from_ln(self.ln0[s], a, k, t1)
+        elif k * t1 > 600.0 or x0 > 1e290:
             ln = affine_log_x(x0, a, k, t1) if x0 > 0 else None
-            if ln is None or ln > 709.0:
+            if ln is None:
                 raise StockOverflowError(s, t1, ln)
+        if ln is not None and ln > LN_PROXY:
+            if not math.isfinite(ln):
+                raise StockOverflowError(s, t1, ln)  # ln itself overflowed
+            out = {}
+            for r in self.ids:
+                if r == s:
+                    continue
+                ar, kr = coef[r]
+                if kr != 0.0:  # another balance integrates x_s: beyond float as well
+                    raise StockOverflowError(r, t1, None)
+                out[r] = self.x0[r] + ar * t
+            self.ln_out = {s: ln}
+            out[s] = PROXY
+            return out
+        if ln is not None:
+            x0 = math.exp(self.ln0[s]) if s in self.ln0 else x0  # leaving log mode
         xs = x0 + (a + k * x0) * _e1(k, t1)
         ints = x0 * t1 + (a + k * x0) * _e2(k, t1)  # integral of x_s on [0,t1]
+        self.ln_out = {}
         if cap is not None and xs > cap:
             xs = cap
         out = {}
@@ -172,6 +210,14 @@ class _Plan:
     def _affine_reach_s(self, v: float) -> float | None:
         s, coef = self.affine
         a, k = coef[s]
+        if s in self.ln0:
+            lv = math.log(v) if v > 0 else -math.inf
+            if lv <= self.ln0[s]:
+                return 0.0
+            if k <= 0:
+                return None
+            c = a / k
+            return (lv + math.log1p(c / v) - self.ln0[s] - math.log1p(c * math.exp(-self.ln0[s]))) / k
         x0 = self.x0[s]
         if x0 >= v:
             return 0.0
@@ -192,16 +238,23 @@ class _Plan:
             return None
         s, coef = self.affine
         a, k = coef[s]
+        if s in self.ln0:
+            return affine_log_from_ln(self.ln0[s], a, k, t)
         if self.x0[s] <= 0 or s in self.cap:
             return None
         return affine_log_x(self.x0[s], a, k, t)
 
     def state_at(self, t: float) -> dict[str, float]:
         if t <= 0:
+            self.ln_out = {r: v for r, v in self.ln0.items()}
             return dict(self.x0)
+        self.ln_out = {}
         if self.affine is not None:
             out = self._affine_state(t)
         else:
+            if self.ln0:
+                r = next(iter(self.ln0))
+                raise StockOverflowError(r, t, self.ln0[r])  # log mode needs affine dynamics
             out = self._numeric(t, None, None)[1]
         for r, v in out.items():
             if not math.isfinite(v):
@@ -219,6 +272,8 @@ class _Plan:
 
     def time_to_reach(self, r: str, v: float, horizon: float) -> float | None:
         """Time until balance r reaches v (None if never / beyond horizon)."""
+        if self.affine is not None and r == self.affine[0] and r in self.ln0:
+            return self._affine_reach_s(v)
         if self.x0.get(r, 0.0) >= v:
             return 0.0
         if self.affine is not None:

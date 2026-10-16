@@ -1,0 +1,438 @@
+[
+ {
+  "variant": "no_farm(baseline)",
+  "opt": "beam",
+  "final_production": 482580.0,
+  "trainer": 0,
+  "forge_purchases": [],
+  "stage_timeline": null,
+  "wall_s": 51.2,
+  "gain": 1.0,
+  "note": "影子价格（v0.1.7 E）"
+ },
+ {
+  "variant": "no_farm(baseline)",
+  "opt": "greedy",
+  "final_production": 482580.0,
+  "trainer": 0,
+  "forge_purchases": [],
+  "stage_timeline": null,
+  "wall_s": 0.2,
+  "gain": 1.0,
+  "note": "影子价格（v0.1.7 E）"
+ },
+ {
+  "variant": "forge_x3",
+  "opt": "beam",
+  "final_production": 1613880.0,
+  "trainer": 3,
+  "forge_purchases": [
+   350.5
+  ],
+  "stage_timeline": null,
+  "wall_s": 80.4,
+  "gain": 3.3443,
+  "note": "影子价格（v0.1.7 E）"
+ },
+ {
+  "variant": "forge_x3",
+  "opt": "greedy",
+  "final_production": 1613880.0,
+  "trainer": 3,
+  "forge_purchases": [
+   350.5
+  ],
+  "stage_timeline": [
+   {
+    "t": 127.6,
+    "stage": 1,
+    "duration_s": 7.5
+   },
+   {
+    "t": 135.1,
+    "stage": 2,
+    "duration_s": 9.7
+   },
+   {
+    "t": 144.8,
+    "stage": 3,
+    "duration_s": 12.7
+   },
+   {
+    "t": 157.5,
+    "stage": 4,
+    "duration_s": 16.5
+   },
+   {
+    "t": 174.0,
+    "stage": 5,
+    "duration_s": 1626.0
+   }
+  ],
+  "wall_s": 0.3,
+  "gain": 3.3443,
+  "note": "影子价格（v0.1.7 E）"
+ },
+ {
+  "variant": "forge_x1.5",
+  "opt": "beam",
+  "final_production": 752130.0,
+  "trainer": 3,
+  "forge_purchases": [
+   394.4
+  ],
+  "stage_timeline": null,
+  "wall_s": 77.0,
+  "gain": 1.5586,
+  "note": "影子价格（v0.1.7 E）"
+ },
+ {
+  "variant": "forge_x1.5",
+  "opt": "greedy",
+  "final_production": 752130.0,
+  "trainer": 3,
+  "forge_purchases": [
+   394.4
+  ],
+  "stage_timeline": [
+   {
+    "t": 127.6,
+    "stage": 1,
+    "duration_s": 7.5
+   },
+   {
+    "t": 135.1,
+    "stage": 2,
+    "duration_s": 9.7
+   },
+   {
+    "t": 144.8,
+    "stage": 3,
+    "duration_s": 12.7
+   },
+   {
+    "t": 157.5,
+    "stage": 4,
+    "duration_s": 16.5
+   },
+   {
+    "t": 174.0,
+    "stage": 5,
+    "duration_s": 1626.0
+   }
+  ],
+  "wall_s": 0.4,
+  "gain": 1.5586,
+  "note": "影子价格（v0.1.7 E）"
+ },
+ {
+  "variant": "forge_x1",
+  "opt": "beam",
+  "final_production": 482580.0,
+  "trainer": 3,
+  "forge_purchases": [],
+  "stage_timeline": null,
+  "wall_s": 74.5,
+  "gain": 1.0,
+  "note": "影子价格（v0.1.7 E）"
+ },
+ {
+  "variant": "forge_x1",
+  "opt": "greedy",
+  "final_production": 482580.0,
+  "trainer": 3,
+  "forge_purchases": [],
+  "stage_timeline": [
+   {
+    "t": 127.6,
+    "stage": 1,
+    "duration_s": 7.5
+   },
+   {
+    "t": 135.1,
+    "stage": 2,
+    "duration_s": 9.7
+   },
+   {
+    "t": 144.8,
+    "stage": 3,
+    "duration_s": 12.7
+   },
+   {
+    "t": 157.5,
+    "stage": 4,
+    "duration_s": 16.5
+   },
+   {
+    "t": 174.0,
+    "stage": 5,
+    "duration_s": 1626.0
+   }
+  ],
+  "wall_s": 0.3,
+  "gain": 1.0,
+  "note": "影子价格（v0.1.7 E）"
+ },
+ {
+  "variant": "forge_no_material",
+  "opt": "beam",
+  "final_production": 1632060.0,
+  "trainer": 0,
+  "forge_purchases": [
+   307.0
+  ],
+  "stage_timeline": null,
+  "wall_s": 74.1,
+  "gain": 3.3819,
+  "note": "影子价格（v0.1.7 E）"
+ },
+ {
+  "variant": "forge_no_material",
+  "opt": "greedy",
+  "final_production": 1632060.0,
+  "trainer": 0,
+  "forge_purchases": [
+   307.0
+  ],
+  "stage_timeline": [],
+  "wall_s": 0.3,
+  "gain": 3.3819,
+  "note": "影子价格（v0.1.7 E）"
+ },
+ {
+  "variant": "material_given(forge_only)",
+  "opt": "beam",
+  "final_production": 1632060.0,
+  "trainer": 0,
+  "forge_purchases": [
+   307.0
+  ],
+  "stage_timeline": null,
+  "wall_s": 60.2,
+  "gain": 3.3819,
+  "note": "影子价格（v0.1.7 E）"
+ },
+ {
+  "variant": "material_given(forge_only)",
+  "opt": "greedy",
+  "final_production": 1632060.0,
+  "trainer": 0,
+  "forge_purchases": [
+   307.0
+  ],
+  "stage_timeline": null,
+  "wall_s": 0.3,
+  "gain": 3.3819,
+  "note": "影子价格（v0.1.7 E）"
+ },
+ {
+  "variant": "drop_x0.5",
+  "opt": "beam",
+  "final_production": 1613880.0,
+  "trainer": 3,
+  "forge_purchases": [
+   548.0
+  ],
+  "stage_timeline": null,
+  "wall_s": 87.5,
+  "gain": 3.3443,
+  "note": "影子价格（v0.1.7 E）"
+ },
+ {
+  "variant": "drop_x0.5",
+  "opt": "greedy",
+  "final_production": 1613880.0,
+  "trainer": 3,
+  "forge_purchases": [
+   548.0
+  ],
+  "stage_timeline": [
+   {
+    "t": 127.6,
+    "stage": 1,
+    "duration_s": 7.5
+   },
+   {
+    "t": 135.1,
+    "stage": 2,
+    "duration_s": 9.7
+   },
+   {
+    "t": 144.8,
+    "stage": 3,
+    "duration_s": 12.7
+   },
+   {
+    "t": 157.5,
+    "stage": 4,
+    "duration_s": 16.5
+   },
+   {
+    "t": 174.0,
+    "stage": 5,
+    "duration_s": 1626.0
+   }
+  ],
+  "wall_s": 0.4,
+  "gain": 3.3443,
+  "note": "影子价格（v0.1.7 E）"
+ },
+ {
+  "variant": "drop_x2",
+  "opt": "beam",
+  "final_production": 1630080.0,
+  "trainer": 3,
+  "forge_purchases": [
+   333.6
+  ],
+  "stage_timeline": null,
+  "wall_s": 83.1,
+  "gain": 3.3778,
+  "note": "影子价格（v0.1.7 E）"
+ },
+ {
+  "variant": "drop_x2",
+  "opt": "greedy",
+  "final_production": 1630080.0,
+  "trainer": 3,
+  "forge_purchases": [
+   333.6
+  ],
+  "stage_timeline": [
+   {
+    "t": 127.6,
+    "stage": 1,
+    "duration_s": 7.5
+   },
+   {
+    "t": 135.1,
+    "stage": 2,
+    "duration_s": 9.7
+   },
+   {
+    "t": 144.8,
+    "stage": 3,
+    "duration_s": 12.7
+   },
+   {
+    "t": 157.5,
+    "stage": 4,
+    "duration_s": 16.5
+   },
+   {
+    "t": 174.0,
+    "stage": 5,
+    "duration_s": 1626.0
+   }
+  ],
+  "wall_s": 0.3,
+  "gain": 3.3778,
+  "note": "影子价格（v0.1.7 E）"
+ },
+ {
+  "variant": "bottleneck_mat500",
+  "opt": "beam",
+  "final_production": 384600.0,
+  "trainer": 3,
+  "forge_purchases": [],
+  "stage_timeline": null,
+  "wall_s": 72.9,
+  "gain": 0.797,
+  "note": "影子价格（v0.1.7 E）"
+ },
+ {
+  "variant": "bottleneck_mat500",
+  "opt": "greedy",
+  "final_production": 384120.0,
+  "trainer": 3,
+  "forge_purchases": [],
+  "stage_timeline": [
+   {
+    "t": 127.6,
+    "stage": 1,
+    "duration_s": 7.5
+   },
+   {
+    "t": 135.1,
+    "stage": 2,
+    "duration_s": 9.7
+   },
+   {
+    "t": 144.8,
+    "stage": 3,
+    "duration_s": 12.7
+   },
+   {
+    "t": 157.5,
+    "stage": 4,
+    "duration_s": 16.5
+   },
+   {
+    "t": 174.0,
+    "stage": 5,
+    "duration_s": 1626.0
+   }
+  ],
+  "wall_s": 0.3,
+  "gain": 0.796,
+  "note": "影子价格（v0.1.7 E）"
+ },
+ {
+  "variant": "bottleneck_repeatable",
+  "opt": "beam",
+  "final_production": 2227398.75,
+  "trainer": 3,
+  "forge_purchases": [
+   399.3,
+   646.8,
+   1091.3,
+   1757.9
+  ],
+  "stage_timeline": null,
+  "wall_s": 254.9,
+  "gain": 4.6156,
+  "note": "影子价格（v0.1.7 E）"
+ },
+ {
+  "variant": "bottleneck_repeatable",
+  "opt": "greedy",
+  "final_production": 2227398.75,
+  "trainer": 3,
+  "forge_purchases": [
+   399.3,
+   646.8,
+   1091.3,
+   1757.9
+  ],
+  "stage_timeline": [
+   {
+    "t": 127.6,
+    "stage": 1,
+    "duration_s": 7.5
+   },
+   {
+    "t": 135.1,
+    "stage": 2,
+    "duration_s": 9.7
+   },
+   {
+    "t": 144.8,
+    "stage": 3,
+    "duration_s": 12.7
+   },
+   {
+    "t": 157.5,
+    "stage": 4,
+    "duration_s": 16.5
+   },
+   {
+    "t": 174.0,
+    "stage": 5,
+    "duration_s": 1626.0
+   }
+  ],
+  "wall_s": 0.8,
+  "gain": 4.6156,
+  "note": "影子价格（v0.1.7 E）"
+ }
+]

@@ -60,6 +60,9 @@ class OptimizeResult:
     # For search optimizers (bnb): how many leading purchases were chosen by the
     # search itself; the rest of ``purchases`` came from the engine's policy.
     search_decisions: int | None = None
+    # v0.1.7: ln of final production / balance when the run ended in log mode
+    final_production_ln: float | None = None
+    final_balance_ln: float | None = None
 
 
 DEFAULT_MAX_STEPS = 100_000
@@ -469,6 +472,7 @@ class GreedyOptimizer:
         steps: list[PurchaseStep] = []
         currency_id = self.engine._get_primary_resource_id()
         self.hit_max_steps = False
+        self.engine.valuation_target = target_time  # shadow prices: horizon
 
         for i in range(max_steps):
             best = self.find_best_purchase()
@@ -783,6 +787,10 @@ class GreedyOptimizer:
             final_time=self.engine.current_time,
             approximation_level=level,
         )
+        _p = self.engine._get_primary_resource_id()
+        if self.engine.log_mode and _p:
+            result.final_production_ln = self.engine.production_rate_ln(_p)
+            result.final_balance_ln = self.engine.get_balance_ln(_p)
         if getattr(self, "hit_max_steps", False) and self.engine.current_time < target_time:
             result.truncated = True
             msg = (

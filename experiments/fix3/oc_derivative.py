@@ -21,10 +21,11 @@ def run(formula, T, mode=None, floor=0.0):
     o.save_floor = floor
     try:
         r = o.optimize(target_time=T)
-    except OverflowError:  # engine stock closed form overflows float (known issue)
+    except OverflowError:  # v0.1.7: only if ln itself overflows (log mode otherwise)
         return {"g5": None, "g10": None, "final_production": None, "n": None, "error": "OverflowError"}
     arr = {k: next((round(p.time, 3) for p in r.purchases if p.node_id == k), None) for k in ("g5", "g10")}
-    return {"g5": arr["g5"], "g10": arr["g10"], "final_production": r.final_production, "n": len(r.purchases)}
+    return {"g5": arr["g5"], "g10": arr["g10"], "final_production": r.final_production,
+            "final_production_ln": r.final_production_ln, "log_mode": o.engine.log_mode, "n": len(r.purchases)}
 
 def key(x):
     inf = float("inf")
