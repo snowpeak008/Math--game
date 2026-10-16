@@ -113,3 +113,55 @@ def export_game(game_id: str, format: str = "yaml"):
                 status=400,
             ).model_dump(),
         )
+
+
+# ---------------------------------------------------------------------------
+# Validation without saving (used by the Chinese input editor, /input)
+# ---------------------------------------------------------------------------
+
+# Node types that the schema accepts but the simulation engine currently ignores.
+_ENGINE_IGNORED_TYPES = {
+    "nested_generator", "sacrifice", "achievement", "manager", "converter",
+    "end_condition", "unlock_gate", "choice_group", "gate", "queue",
+}
+
+
+@router.post("/validate")
+def validate_game(payload: dict):
+    """Validate a game definition without saving it.
+
+    Returns {"ok": bool, "errors": [{"loc": str, "msg": str}], "warnings": [...]}.
+    """
+    from pydantic import ValidationError
+
+    errors: list[dict] = []
+    warnings: list[dict] = []
+    try:
+        GameDefinition.model_validate(payload)
+    except ValidationError as exc:
+        for err in exc.errors():
+            loc = ".".join(str(p) for p in err.get("loc", ()))
+            errors.append({"loc": loc, "msg": err.get("msg", "")})
+    except ValueError as exc:  # pragma: no cover - defensive
+        errors.append({"loc": "", "msg": str(exc)})
+
+    for i, node in enumerate(payload.get("nodes", []) or []):
+        t = node.get("type") if isinstance(node, dict) else None
+        if t in _ENGINE_IGNORED_TYPES:
+            warnings.append({
+                "loc": f"nodes.{i}",
+                "msg": f"节点 {node.get('id')!r} 类型 {t} 目前模拟引擎不会生效（只保存，不参与计算）",
+            })
+    if not errors:
+        from idleframework.analysis.static_checks import run_static_checks
+
+        game = GameDefinition.model_validate(payload)
+        for w in run_static_checks(game):
+            ref = w.get("node_id") or w.get("resource_id") or "/".join(w.get("cycle", []))
+            loc = f"node:{ref}" if "node_id" in w else f"check:{w['check']}:{ref}"
+            item = {"loc": loc, "msg": w["message"], "kind": w["kind"], "severity": w["severity"]}
+            if w["kind"] == "unknown_currency":
+                errors.append(item)  # a price/requirement names a non-resource
+            else:
+                warnings.append(item)
+    return {"ok": not errors, "errors": errors, "warnings": warnings}

@@ -238,11 +238,24 @@ def _build_piecewise(args: list[ast.expr]) -> ast.IfExp:
     return ast.IfExp(test=cond, body=val, orelse=rest)
 
 
+_COMPILE_CACHE: dict[str, CompiledFormula] = {}
+
+
 def compile_formula(text: str) -> CompiledFormula:
-    """Parse, compile, and validate a formula string.
+    """Parse, compile, and validate a formula string (memoised by text).
 
     Returns a CompiledFormula with a compiled code object ready for eval().
     """
+    hit = _COMPILE_CACHE.get(text)
+    if hit is not None:
+        return hit
+    result = _compile_formula_uncached(text)
+    if len(_COMPILE_CACHE) < 4096:
+        _COMPILE_CACHE[text] = result
+    return result
+
+
+def _compile_formula_uncached(text: str) -> CompiledFormula:
     # Parse with Lark
     tree = _parse(text)
 

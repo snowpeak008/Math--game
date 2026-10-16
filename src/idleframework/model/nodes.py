@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 # ---------- Helper models ----------
 
@@ -23,6 +23,43 @@ class ConverterIO(BaseModel):
     resource: str
     amount: float
     formula: str | None = None
+
+
+class CostEntry(BaseModel):
+    """One currency component of a price: ``{currency, amount}``.
+
+    For generators ``amount`` is the price of the first unit; unit k costs
+    ``amount * growth_rate**(k-1)`` where ``growth_rate`` defaults to the
+    generator's ``cost_growth_rate``.
+    """
+
+    currency: str
+    amount: float = Field(ge=0)
+    growth_rate: float | None = Field(default=None, gt=0)
+
+
+class Requirement(BaseModel):
+    """Purchase threshold: balance of ``currency`` must be >= ``amount``.
+
+    Checked at every purchase, never consumed.
+    """
+
+    currency: str
+    amount: float = Field(ge=0)
+
+
+def _split_cost_list(data, float_field: str):
+    """Accept ``cost`` as a float (legacy) or a list of CostEntry dicts."""
+    if isinstance(data, dict):
+        c = data.get("cost")
+        if isinstance(c, list):
+            data = dict(data)
+            data["costs"] = c
+            del data["cost"]
+            first = c[0] if c else None
+            amt = (first.get("amount") if isinstance(first, dict) else getattr(first, "amount", 0)) if first is not None else 0.0
+            data.setdefault(float_field, amt)
+    return data
 
 
 # ---------- NodeBase ----------
@@ -56,6 +93,15 @@ class Generator(NodeBase):
     cost_base: float = Field(gt=0)
     cost_growth_rate: float = Field(gt=0)
     cycle_time: float = Field(default=1.0, gt=0)
+    # Multi-currency price (input key ``cost`` as a list). None = legacy single
+    # price ``cost_base`` in the generator's own currency.
+    costs: list[CostEntry] | None = None
+    requires: list[Requirement] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _cost_list(cls, data):
+        return _split_cost_list(data, "cost_base")
 
 
 class NestedGenerator(NodeBase):
@@ -77,6 +123,15 @@ class Upgrade(NodeBase):
     stacking_group: str
     duration: float | None = None
     cooldown_time: float | None = None
+    # Multi-currency price (input key ``cost`` as a list). None = legacy single
+    # price ``cost`` in the primary currency.
+    costs: list[CostEntry] | None = None
+    requires: list[Requirement] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _cost_list(cls, data):
+        return _split_cost_list(data, "cost")
 
 
 class PrestigeLayer(NodeBase):

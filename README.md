@@ -42,9 +42,18 @@ cd frontend && npm run dev
 | `tests/` | 单元 / 属性 / E2E 测试 |
 | `benchmarks/` | 性能基准 |
 | `docs/` | 文档 |
+| `samples/` | 示例游戏配置与分析结果（米粒测试版、多货币商店示例） |
+| `screenshots/` | 界面截图 |
 | `IDLE_GAME_MECHANICS_RESEARCH.md` | 放置游戏机制调研 |
 
 ## 版本历史
 
 - **0.1.0** — 上游基线：IdleFramework `a0447d5` 原始代码，新增中文 README 与 `.gitignore`；移除测试产物与 CI 配置（`.github/workflows/`）。
-- **0.1.1**（计划中）— 中文输入界面、引擎修复、多货币支持。
+- **0.1.1** — 在上游基础上的首个功能版本：
+  - **中文输入界面**：`/input` 页面、表格粘贴导入、校验 API（validate）。
+  - **引擎修复**：`advance_to` 结果与步长粒度无关；支持零产出起步；容量与静态检查（static checks）；贪心策略按回本时间（payback）决策。
+  - **存量联动闭式解**：与逐步模拟相比误差由 23%–212% 降至 <0.01%。
+  - **多货币**：成本列表支持多种货币、`requires` 解锁阈值、按货币分账（ledger）。
+  - **示例**：`samples/米粒测试版`、`samples/多货币商店示例`。
+  - **中文文档**。
+  - **已知限制**：beam / MCTS / 分支定界（BnB）优化器尚不支持多货币；MCTS 运行较慢。

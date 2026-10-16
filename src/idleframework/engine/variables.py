@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import functools
 import re
 from typing import TYPE_CHECKING
 
@@ -10,6 +11,7 @@ if TYPE_CHECKING:
     from idleframework.model.state import GameState
 
 
+@functools.lru_cache(maxsize=65536)
 def sanitize_var_name(node_id: str) -> str:
     """Sanitize a node ID into a valid Python identifier for formula variables."""
     return re.sub(r"[^a-zA-Z0-9_]", "_", node_id)

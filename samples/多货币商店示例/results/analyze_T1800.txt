@@ -1,0 +1,18 @@
+Analyzing '多货币商店示例' for 1800.0s...
+
+=== Analysis Report: 多货币商店示例 ===
+Simulation time: 1800.0s
+
+Dead upgrades: 0
+
+Progression walls: 2
+  - Generator 'diamond_mine' has high cost growth rate (1.35)
+  - Generator 'ticket_press' has high cost growth rate (2.00)
+
+Dominant strategy: bank (ratio: 5.7x)
+
+Optimizer result:
+  Purchases: 317
+  Final production: 4.52e+05
+  Final balance: 6.03e+07
+  Simulated until: 1800.0s

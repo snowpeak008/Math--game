@@ -12,6 +12,7 @@ export default function Nav() {
     <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-2">
         <span className="font-bold text-lg mr-4">IdleFramework</span>
+        <NavLink to="/input" className={linkClass}>数值录入</NavLink>
         <NavLink to="/play" className={linkClass}>Play</NavLink>
         <NavLink to="/analyze" className={linkClass}>Analyze</NavLink>
         <NavLink to="/editor" className={linkClass}>Editor</NavLink>

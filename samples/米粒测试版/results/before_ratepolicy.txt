@@ -1,0 +1,61 @@
+run1 start=0s purchases=238 prestige=720s(len 720s) +1魂 →1
+   first_buy: {'paddy': 0.0, 'paddy_x2': 45.6, 'wheel': 59.6, 'wheel_x2': 88.0, 'mill': 100.9, 'mill_x2': 163.0, 'granary': 196.6, 'granary_x2': 340.7, 'all_x2': 478.4, 'merchant': 499.7, 'merchant_x2': 699.3}
+   30min: wait max=96.6 p90=8.1 | meaningful max=199.6 p90=144.1
+   shares@600s rate=5.66e+04: {'paddy': 0.06, 'wheel': 0.04, 'mill': 0.19, 'granary': 0.33, 'merchant': 0.38}
+run2 start=720s purchases=122 prestige=1860s(len 1140s) +1魂 →2
+   first_buy: {'paddy_x2': 66.0, 'wheel': 69.7, 'wheel_x2': 109.6, 'mill': 123.7, 'mill_x2': 189.7, 'granary': 215.9, 'all_x2': 972.3, 'granary_x2': 977.5, 'merchant': 988.3}
+   30min: wait max=679.3 p90=6.7 | meaningful max=756.5 p90=756.5
+   shares@600s rate=2.65e+04: {'paddy': 0.81, 'wheel': 0.04, 'mill': 0.07, 'granary': 0.08, 'merchant': 0.0}
+run3 start=1860s purchases=122 prestige=3000s(len 1140s) +1魂 →3
+   first_buy: {'paddy_x2': 64.8, 'wheel': 67.8, 'wheel_x2': 105.9, 'mill': 115.9, 'mill_x2': 178.8, 'granary': 205.3, 'all_x2': 868.5, 'granary_x2': 873.3, 'merchant': 883.2}
+   30min: wait max=599.2 p90=6.3 | meaningful max=663.2 p90=663.2
+   shares@600s rate=2.96e+04: {'paddy': 0.82, 'wheel': 0.04, 'mill': 0.07, 'granary': 0.07, 'merchant': 0.0}
+run4 start=3000s purchases=137 prestige=4080s(len 1080s) +1魂 →4
+   first_buy: {'paddy_x2': 63.9, 'wheel': 66.5, 'wheel_x2': 97.6, 'mill': 107.0, 'mill_x2': 168.3, 'granary': 186.5, 'all_x2': 709.1, 'granary_x2': 713.6, 'merchant': 723.0, 'merchant_x2': 1009.7}
+   30min: wait max=460.2 p90=6.1 | meaningful max=522.6 p90=522.6
+   shares@600s rate=3.25e+04: {'paddy': 0.82, 'wheel': 0.04, 'mill': 0.07, 'granary': 0.07, 'merchant': 0.0}
+run5 start=4080s purchases=137 prestige=5160s(len 1080s) +1魂 →5
+   first_buy: {'paddy_x2': 62.7, 'wheel': 65.0, 'wheel_x2': 95.3, 'mill': 104.3, 'mill_x2': 157.3, 'granary': 174.9, 'all_x2': 724.0, 'granary_x2': 728.1, 'merchant': 736.7, 'merchant_x2': 1018.6}
+   30min: wait max=485.9 p90=6.0 | meaningful max=549.2 p90=549.2
+   shares@600s rate=3.56e+04: {'paddy': 0.82, 'wheel': 0.04, 'mill': 0.07, 'granary': 0.07, 'merchant': 0.0}
+run6 start=5160s purchases=137 prestige=6240s(len 1080s) +1魂 →6
+   first_buy: {'paddy_x2': 62.2, 'wheel': 64.2, 'wheel_x2': 89.9, 'mill': 103.6, 'mill_x2': 156.7, 'granary': 174.5, 'all_x2': 665.0, 'granary_x2': 668.9, 'merchant': 677.2, 'merchant_x2': 945.9}
+   30min: wait max=435.4 p90=5.6 | meaningful max=490.6 p90=490.6
+   shares@600s rate=3.81e+04: {'paddy': 0.83, 'wheel': 0.04, 'mill': 0.07, 'granary': 0.07, 'merchant': 0.0}
+run7 start=6240s purchases=137 prestige=7260s(len 1020s) +1魂 →7
+   first_buy: {'paddy_x2': 62.6, 'wheel': 64.2, 'wheel_x2': 84.1, 'mill': 92.6, 'mill_x2': 136.8, 'granary': 153.9, 'all_x2': 559.7, 'granary_x2': 563.4, 'merchant': 571.3, 'merchant_x2': 808.8}
+   30min: wait max=355.6 p90=5.0 | meaningful max=405.8 p90=405.8
+   shares@600s rate=1.47e+05: {'paddy': 0.46, 'wheel': 0.02, 'mill': 0.12, 'granary': 0.2, 'merchant': 0.2}
+run8 start=7260s purchases=137 prestige=8280s(len 1020s) +1魂 →8
+   first_buy: {'paddy_x2': 61.9, 'wheel': 63.4, 'wheel_x2': 78.4, 'mill': 87.5, 'mill_x2': 136.0, 'granary': 153.5, 'all_x2': 567.1, 'granary_x2': 570.6, 'merchant': 577.9, 'merchant_x2': 805.3}
+   30min: wait max=368.3 p90=4.4 | meaningful max=413.6 p90=413.6
+   shares@600s rate=1.48e+05: {'paddy': 0.49, 'wheel': 0.03, 'mill': 0.12, 'granary': 0.2, 'merchant': 0.16}
+run9 start=8280s purchases=137 prestige=9240s(len 960s) +1魂 →9
+   first_buy: {'paddy_x2': 61.0, 'wheel': 61.7, 'wheel_x2': 74.3, 'mill': 82.4, 'mill_x2': 125.8, 'granary': 139.9, 'all_x2': 536.0, 'granary_x2': 539.2, 'merchant': 546.0, 'merchant_x2': 699.6}
+   30min: wait max=349.6 p90=4.2 | meaningful max=396.1 p90=396.1
+   shares@600s rate=1.89e+05: {'paddy': 0.41, 'wheel': 0.05, 'mill': 0.11, 'granary': 0.19, 'merchant': 0.24}
+run10 start=9240s purchases=137 prestige=10200s(len 960s) +1魂 →10
+   first_buy: {'paddy_x2': 60.7, 'wheel': 61.4, 'wheel_x2': 73.7, 'mill': 82.2, 'mill_x2': 118.4, 'granary': 135.1, 'all_x2': 469.5, 'granary_x2': 472.6, 'merchant': 479.3, 'merchant_x2': 704.4}
+   30min: wait max=286.6 p90=4.2 | meaningful max=334.4 p90=334.4
+   shares@600s rate=2.92e+05: {'paddy': 0.6, 'wheel': 0.03, 'mill': 0.07, 'granary': 0.13, 'merchant': 0.16}
+run11 start=10200s purchases=137 prestige=11100s(len 900s) +1魂 →11
+   first_buy: {'paddy_x2': 60.7, 'wheel': 61.2, 'wheel_x2': 73.6, 'mill': 79.9, 'mill_x2': 118.2, 'granary': 133.4, 'granary_x2': 239.4, 'all_x2': 409.1, 'merchant': 414.3, 'merchant_x2': 579.2}
+   30min: wait max=165.8 p90=4.0 | meaningful max=169.7 p90=169.7
+   shares@600s rate=4.4e+05: {'paddy': 0.43, 'wheel': 0.03, 'mill': 0.05, 'granary': 0.1, 'merchant': 0.39}
+run12 start=11100s purchases=137 prestige=11940s(len 840s) +1魂 →12
+   first_buy: {'paddy_x2': 60.7, 'wheel': 61.2, 'wheel_x2': 69.7, 'mill': 76.9, 'mill_x2': 114.9, 'granary': 126.4, 'granary_x2': 219.7, 'all_x2': 379.5, 'merchant': 384.4, 'merchant_x2': 569.1}
+   30min: wait max=156.0 p90=3.7 | meaningful max=184.7 p90=184.7
+   shares@600s rate=4.82e+05: {'paddy': 0.42, 'wheel': 0.02, 'mill': 0.05, 'granary': 0.1, 'merchant': 0.41}
+run13 start=11940s purchases=137 prestige=12840s(len 900s) +1魂 →13
+   first_buy: {'paddy_x2': 60.5, 'wheel': 61.0, 'wheel_x2': 68.9, 'mill': 75.8, 'mill_x2': 107.7, 'granary': 124.0, 'granary_x2': 209.8, 'all_x2': 399.4, 'merchant': 404.0, 'merchant_x2': 548.1}
+   30min: wait max=185.9 p90=3.7 | meaningful max=189.6 p90=189.6
+   shares@600s rate=5.06e+05: {'paddy': 0.42, 'wheel': 0.02, 'mill': 0.05, 'granary': 0.09, 'merchant': 0.41}
+run14 start=12840s purchases=137 prestige=13680s(len 840s) +1魂 →14
+   first_buy: {'paddy_x2': 60.3, 'wheel': 60.7, 'wheel_x2': 68.0, 'mill': 74.4, 'mill_x2': 107.1, 'granary': 122.7, 'granary_x2': 208.7, 'all_x2': 369.3, 'merchant': 373.8, 'merchant_x2': 509.6}
+   30min: wait max=157.1 p90=3.5 | meaningful max=160.6 p90=160.6
+   shares@600s rate=5.34e+05: {'paddy': 0.43, 'wheel': 0.02, 'mill': 0.05, 'granary': 0.09, 'merchant': 0.4}
+run15 start=13680s purchases=138 prestige=-
+   first_buy: {'paddy_x2': 60.4, 'wheel': 60.7, 'wheel_x2': 66.7, 'mill': 72.3, 'mill_x2': 106.6, 'granary': 119.8, 'granary_x2': 198.8, 'all_x2': 348.2, 'merchant': 352.5, 'merchant_x2': 459.4}
+   30min: wait max=146.1 p90=3.4 | meaningful max=149.4 p90=149.4
+   shares@600s rate=5.64e+05: {'paddy': 0.43, 'wheel': 0.02, 'mill': 0.05, 'granary': 0.1, 'merchant': 0.4}
+run2_catchup_s 1027.6597614934747 never_bought ['all_x3']

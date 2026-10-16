@@ -22,12 +22,14 @@ class AnalysisReport:
     dominant_strategy: dict | None = None
     sensitivity: list[dict] = field(default_factory=list)
     optimizer_result: OptimizeResult | None = None
+    static_warnings: list[dict] = field(default_factory=list)
 
 
 def _run_greedy(
     game: GameDefinition,
     simulation_time: float,
     initial_balance: float = 50.0,
+    max_steps: int | None = None,
 ) -> OptimizeResult:
     engine = PiecewiseEngine(game)
     pay_resource = engine._get_primary_resource_id()
@@ -41,12 +43,12 @@ def _run_greedy(
             0,
             1,
         )
-        if cost <= initial_balance:
+        if cost <= initial_balance and engine._affordable_now(gen_id):
             engine.purchase(gen_id, 1)
             break
 
     optimizer = GreedyOptimizer(game, engine.state)
-    return optimizer.optimize(target_time=simulation_time, max_steps=500)
+    return optimizer.optimize(target_time=simulation_time, max_steps=max_steps)
 
 
 def _run_optimizer(
@@ -58,8 +60,13 @@ def _run_optimizer(
     mcts_iterations: int = 1000,
     mcts_seed: int | None = None,
     bnb_depth: int = 20,
+    max_steps: int | None = None,
 ) -> OptimizeResult:
-    """Dispatch to the requested optimizer."""
+    """Dispatch to the requested optimizer.
+
+    ``max_steps=None`` uses the greedy default (DEFAULT_MAX_STEPS) and 500 for
+    the search-based optimizers. A truncation warning is attached to the result.
+    """
     engine = PiecewiseEngine(game)
     pay_resource = engine._get_primary_resource_id()
     if pay_resource is None:
@@ -72,7 +79,7 @@ def _run_optimizer(
             0,
             1,
         )
-        if cost <= initial_balance:
+        if cost <= initial_balance and engine._affordable_now(gen_id):
             engine.purchase(gen_id, 1)
             break
 
@@ -87,7 +94,17 @@ def _run_optimizer(
     else:
         raise ValueError(f"Unknown optimizer: {optimizer!r}")
 
-    return opt.optimize(target_time=simulation_time, max_steps=500)
+    if optimizer == "greedy":
+        return opt.optimize(target_time=simulation_time, max_steps=max_steps)
+    steps = 500 if max_steps is None else max_steps
+    result = opt.optimize(target_time=simulation_time, max_steps=steps)
+    if len(result.purchases) >= steps and result.final_time < simulation_time - 1e-6:
+        result.truncated = True
+        result.warnings.append(
+            f"max_steps={steps} reached at t={result.final_time:.1f}s before "
+            f"target_time={simulation_time:.1f}s; simulation truncated"
+        )
+    return result
 
 
 def detect_dead_upgrades(
@@ -148,12 +165,12 @@ def detect_progression_walls(
             0,
             1,
         )
-        if cost <= 50.0:
+        if cost <= 50.0 and engine._affordable_now(gen_id):
             engine.purchase(gen_id, 1)
             break
 
     optimizer = GreedyOptimizer(game, engine.state)
-    result = optimizer.optimize(target_time=simulation_time, max_steps=500)
+    result = optimizer.optimize(target_time=simulation_time)
 
     walls = []
 
@@ -240,6 +257,10 @@ def detect_dominant_strategy(
         gen = engine._generators[gen_id]
         first_cost = bulk_cost(gen.cost_base, gen.cost_growth_rate, 0, 1)
         engine.set_balance(pay_resource, first_cost + 50.0)
+        # multi-currency price / requirements: seed every currency involved
+        for cid, amt in (engine._price(gen_id) or []) + engine._requirements(gen_id):
+            if cid and engine.get_balance(cid) < amt:
+                engine.set_balance(cid, amt + (50.0 if cid == pay_resource else 0.0))
         engine.purchase(gen_id, 1)
 
         _auto_buy_single(engine, gen_id, simulation_time)
@@ -320,12 +341,16 @@ def run_full_analysis(
     mcts_iterations: int = 1000,
     mcts_seed: int | None = None,
     bnb_depth: int = 20,
+    max_steps: int | None = None,
 ) -> AnalysisReport:
     report = AnalysisReport(
         game_name=game.name,
         simulation_time=simulation_time,
     )
 
+    from idleframework.analysis.static_checks import run_static_checks
+
+    report.static_warnings = run_static_checks(game)
     report.dead_upgrades = detect_dead_upgrades(game, simulation_time)
     report.progression_walls = detect_progression_walls(game, simulation_time)
     report.dominant_strategy = detect_dominant_strategy(game, simulation_time)
@@ -337,6 +362,7 @@ def run_full_analysis(
         mcts_iterations=mcts_iterations,
         mcts_seed=mcts_seed,
         bnb_depth=bnb_depth,
+        max_steps=max_steps,
     )
 
     return report

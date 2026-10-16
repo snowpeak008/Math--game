@@ -1,0 +1,299 @@
+{
+  "schema_version": "1.0",
+  "name": "米粒测试版",
+  "description": "IdleFramework 可表达的 5 生产者 + 倍率/里程碑 + 1 层转生 + 自动购买 测试游戏",
+  "nodes": [
+    {
+      "id": "rice",
+      "type": "resource",
+      "name": "米粒",
+      "initial_value": 10
+    },
+    {
+      "id": "soul",
+      "type": "resource",
+      "name": "稻魂",
+      "initial_value": 0
+    },
+    {
+      "id": "paddy",
+      "type": "generator",
+      "name": "稻田",
+      "base_production": 1,
+      "cost_base": 10,
+      "cost_growth_rate": 1.07,
+      "cycle_time": 1.0
+    },
+    {
+      "id": "ms_paddy",
+      "type": "synergy",
+      "name": "稻田里程碑",
+      "sources": [
+        "paddy"
+      ],
+      "target": "paddy",
+      "formula_expr": "2 ** floor(owned_paddy / 25) - 1"
+    },
+    {
+      "id": "wheel",
+      "type": "generator",
+      "name": "水车",
+      "base_production": 6,
+      "cost_base": 120,
+      "cost_growth_rate": 1.1,
+      "cycle_time": 1.0
+    },
+    {
+      "id": "ms_wheel",
+      "type": "synergy",
+      "name": "水车里程碑",
+      "sources": [
+        "wheel"
+      ],
+      "target": "wheel",
+      "formula_expr": "2 ** floor(owned_wheel / 25) - 1"
+    },
+    {
+      "id": "mill",
+      "type": "generator",
+      "name": "碾坊",
+      "base_production": 40,
+      "cost_base": 1500,
+      "cost_growth_rate": 1.12,
+      "cycle_time": 1.0
+    },
+    {
+      "id": "ms_mill",
+      "type": "synergy",
+      "name": "碾坊里程碑",
+      "sources": [
+        "mill"
+      ],
+      "target": "mill",
+      "formula_expr": "2 ** floor(owned_mill / 25) - 1"
+    },
+    {
+      "id": "granary",
+      "type": "generator",
+      "name": "粮仓",
+      "base_production": 260,
+      "cost_base": 22000,
+      "cost_growth_rate": 1.14,
+      "cycle_time": 1.0
+    },
+    {
+      "id": "ms_granary",
+      "type": "synergy",
+      "name": "粮仓里程碑",
+      "sources": [
+        "granary"
+      ],
+      "target": "granary",
+      "formula_expr": "2 ** floor(owned_granary / 25) - 1"
+    },
+    {
+      "id": "merchant",
+      "type": "generator",
+      "name": "米商",
+      "base_production": 1800,
+      "cost_base": 350000,
+      "cost_growth_rate": 1.16,
+      "cycle_time": 1.0
+    },
+    {
+      "id": "ms_merchant",
+      "type": "synergy",
+      "name": "米商里程碑",
+      "sources": [
+        "merchant"
+      ],
+      "target": "merchant",
+      "formula_expr": "2 ** floor(owned_merchant / 25) - 1"
+    },
+    {
+      "id": "paddy_x2",
+      "type": "upgrade",
+      "name": "稻田x2",
+      "upgrade_type": "multiplicative",
+      "magnitude": 2,
+      "cost": 100,
+      "target": "paddy",
+      "stacking_group": "upgrades"
+    },
+    {
+      "id": "wheel_x2",
+      "type": "upgrade",
+      "name": "水车x2",
+      "upgrade_type": "multiplicative",
+      "magnitude": 2,
+      "cost": 1500,
+      "target": "wheel",
+      "stacking_group": "upgrades"
+    },
+    {
+      "id": "mill_x2",
+      "type": "upgrade",
+      "name": "碾坊x2",
+      "upgrade_type": "multiplicative",
+      "magnitude": 2,
+      "cost": 20000,
+      "target": "mill",
+      "stacking_group": "upgrades"
+    },
+    {
+      "id": "granary_x2",
+      "type": "upgrade",
+      "name": "粮仓x2",
+      "upgrade_type": "multiplicative",
+      "magnitude": 2,
+      "cost": 300000,
+      "target": "granary",
+      "stacking_group": "upgrades"
+    },
+    {
+      "id": "merchant_x2",
+      "type": "upgrade",
+      "name": "米商x2",
+      "upgrade_type": "multiplicative",
+      "magnitude": 2,
+      "cost": 5000000,
+      "target": "merchant",
+      "stacking_group": "upgrades"
+    },
+    {
+      "id": "all_x2",
+      "type": "upgrade",
+      "name": "丰收x2",
+      "upgrade_type": "multiplicative",
+      "magnitude": 2,
+      "cost": 1000000,
+      "target": "_all",
+      "stacking_group": "upgrades"
+    },
+    {
+      "id": "all_x3",
+      "type": "upgrade",
+      "name": "大丰收x3",
+      "upgrade_type": "multiplicative",
+      "magnitude": 3,
+      "cost": 50000000,
+      "target": "_all",
+      "stacking_group": "upgrades"
+    },
+    {
+      "id": "rebirth",
+      "type": "prestige_layer",
+      "name": "稻魂转生",
+      "layer_index": 0,
+      "currency_id": "soul",
+      "formula_expr": "max(0, floor(sqrt(lifetime_rice / 1e+07)) - balance_soul)",
+      "reset_scope": [
+        "rice",
+        "paddy",
+        "wheel",
+        "mill",
+        "granary",
+        "merchant",
+        "paddy_x2",
+        "wheel_x2",
+        "mill_x2",
+        "granary_x2",
+        "merchant_x2",
+        "all_x2",
+        "all_x3"
+      ],
+      "persistence_scope": [
+        "soul"
+      ]
+    },
+    {
+      "id": "auto_paddy",
+      "type": "autobuyer",
+      "name": "自动买稻田",
+      "target": "paddy",
+      "interval": 10,
+      "bulk_amount": "max",
+      "condition": "balance_soul >= 1"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_paddy",
+      "source": "paddy",
+      "target": "rice",
+      "edge_type": "production_target"
+    },
+    {
+      "id": "soul_paddy",
+      "source": "soul",
+      "target": "paddy",
+      "edge_type": "state_modifier",
+      "target_property": "base_production",
+      "modifier_mode": "multiply",
+      "formula": "1 + 0.1 * balance_soul"
+    },
+    {
+      "id": "e_wheel",
+      "source": "wheel",
+      "target": "rice",
+      "edge_type": "production_target"
+    },
+    {
+      "id": "soul_wheel",
+      "source": "soul",
+      "target": "wheel",
+      "edge_type": "state_modifier",
+      "target_property": "base_production",
+      "modifier_mode": "multiply",
+      "formula": "1 + 0.1 * balance_soul"
+    },
+    {
+      "id": "e_mill",
+      "source": "mill",
+      "target": "rice",
+      "edge_type": "production_target"
+    },
+    {
+      "id": "soul_mill",
+      "source": "soul",
+      "target": "mill",
+      "edge_type": "state_modifier",
+      "target_property": "base_production",
+      "modifier_mode": "multiply",
+      "formula": "1 + 0.1 * balance_soul"
+    },
+    {
+      "id": "e_granary",
+      "source": "granary",
+      "target": "rice",
+      "edge_type": "production_target"
+    },
+    {
+      "id": "soul_granary",
+      "source": "soul",
+      "target": "granary",
+      "edge_type": "state_modifier",
+      "target_property": "base_production",
+      "modifier_mode": "multiply",
+      "formula": "1 + 0.1 * balance_soul"
+    },
+    {
+      "id": "e_merchant",
+      "source": "merchant",
+      "target": "rice",
+      "edge_type": "production_target"
+    },
+    {
+      "id": "soul_merchant",
+      "source": "soul",
+      "target": "merchant",
+      "edge_type": "state_modifier",
+      "target_property": "base_production",
+      "modifier_mode": "multiply",
+      "formula": "1 + 0.1 * balance_soul"
+    }
+  ],
+  "stacking_groups": {
+    "upgrades": "multiplicative"
+  }
+}

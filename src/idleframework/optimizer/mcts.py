@@ -221,11 +221,15 @@ class MCTSOptimizer:
                 backup_node.total_value += value
                 backup_node = backup_node.parent
 
-        if not root.children:
+        # Root children are created from the *simulated* candidate list, which is
+        # not filtered by reachability; only return ids the caller can act on.
+        allowed = {c["node_id"] for c in candidates}
+        valid = [ch for nid, ch in root.children.items() if nid in allowed]
+        if not valid:
             candidates.sort(key=lambda c: (-c["efficiency"], c["cost"]))
             return candidates[0]["node_id"]
 
-        best_child = max(root.children.values(), key=lambda c: c.visits)
+        best_child = max(valid, key=lambda c: c.visits)
         return best_child.node_id
 
     def _sim_purchase(

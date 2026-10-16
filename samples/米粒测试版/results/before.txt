@@ -1,0 +1,38 @@
+run1 start=0s purchases=393 prestige=1320s(len 1320s) +5魂 →5
+   first_buy: {'paddy': 0.0, 'paddy_x2': 45.6, 'wheel': 59.6, 'wheel_x2': 88.0, 'mill': 100.9, 'mill_x2': 163.0, 'granary': 196.6, 'granary_x2': 340.7, 'all_x2': 478.4, 'merchant': 499.7, 'merchant_x2': 699.3, 'all_x3': 1100.7}
+   30min: wait max=259.7 p90=8.8 | meaningful max=401.4 p90=199.6
+   shares@600s rate=5.66e+04: {'paddy': 0.06, 'wheel': 0.04, 'mill': 0.19, 'granary': 0.33, 'merchant': 0.38}
+run2 start=1320s purchases=137 prestige=3420s(len 2100s) +5魂 →10
+   first_buy: {'paddy_x2': 62.2, 'wheel': 64.2, 'wheel_x2': 89.9, 'mill': 103.6, 'mill_x2': 156.7, 'granary': 174.5, 'all_x2': 665.0, 'granary_x2': 668.9, 'merchant': 677.2, 'merchant_x2': 945.9}
+   30min: wait max=435.4 p90=5.6 | meaningful max=490.6 p90=490.6
+   shares@600s rate=3.81e+04: {'paddy': 0.83, 'wheel': 0.04, 'mill': 0.07, 'granary': 0.07, 'merchant': 0.0}
+   shares@1800s rate=5.39e+05: {'paddy': 0.63, 'wheel': 0.02, 'mill': 0.03, 'granary': 0.06, 'merchant': 0.26}
+run3 start=3420s purchases=298 prestige=5280s(len 1860s) +10魂 →20
+   first_buy: {'paddy_x2': 60.7, 'wheel': 61.2, 'wheel_x2': 73.6, 'mill': 79.9, 'mill_x2': 118.2, 'granary': 133.4, 'granary_x2': 239.4, 'all_x2': 409.1, 'merchant': 414.3, 'merchant_x2': 579.2, 'all_x3': 1547.6}
+   30min: wait max=944.4 p90=3.8 | meaningful max=968.4 p90=169.7
+   shares@600s rate=4.4e+05: {'paddy': 0.43, 'wheel': 0.03, 'mill': 0.05, 'granary': 0.1, 'merchant': 0.39}
+   shares@1800s rate=8.66e+06: {'paddy': 0.33, 'wheel': 0.03, 'mill': 0.07, 'granary': 0.17, 'merchant': 0.4}
+run4 start=5280s purchases=336 prestige=7020s(len 1740s) +21魂 →41
+   first_buy: {'paddy_x2': 60.0, 'wheel': 60.2, 'wheel_x2': 64.5, 'mill': 68.5, 'mill_x2': 88.8, 'granary': 102.2, 'granary_x2': 167.2, 'all_x2': 249.0, 'merchant': 252.6, 'merchant_x2': 338.0, 'all_x3': 985.9}
+   30min: wait max=628.7 p90=4.2 | meaningful max=684.1 p90=647.9
+   shares@600s rate=1.05e+06: {'paddy': 0.62, 'wheel': 0.02, 'mill': 0.03, 'granary': 0.07, 'merchant': 0.27}
+run5 start=7020s purchases=393 prestige=8700s(len 1680s) +43魂 →84
+   first_buy: {'paddy_x2': 60.0, 'wheel': 60.0, 'wheel_x2': 60.7, 'mill': 61.8, 'mill_x2': 70.0, 'granary': 76.4, 'granary_x2': 107.2, 'all_x2': 149.7, 'merchant': 152.6, 'merchant_x2': 189.4, 'all_x3': 564.6}
+   30min: wait max=355.5 p90=4.0 | meaningful max=375.2 p90=60.0
+   shares@600s rate=1.72e+07: {'paddy': 0.41, 'wheel': 0.02, 'mill': 0.04, 'granary': 0.09, 'merchant': 0.45}
+run6 start=8700s purchases=445 prestige=10500s(len 1800s) +84魂 →168
+   first_buy: {'paddy_x2': 60.0, 'wheel': 60.0, 'wheel_x2': 60.0, 'mill': 60.3, 'mill_x2': 62.4, 'granary': 64.9, 'granary_x2': 77.7, 'all_x2': 96.2, 'merchant': 97.9, 'merchant_x2': 116.5, 'all_x3': 228.7}
+   30min: wait max=170.0 p90=4.4 | meaningful max=112.2 p90=60.0
+   shares@600s rate=9.17e+07: {'paddy': 0.34, 'wheel': 0.03, 'mill': 0.04, 'granary': 0.09, 'merchant': 0.5}
+   shares@1800s rate=2.33e+08: {'paddy': 0.6, 'wheel': 0.03, 'mill': 0.04, 'granary': 0.09, 'merchant': 0.24}
+run7 start=10500s purchases=482 prestige=12720s(len 2220s) +174魂 →342
+   first_buy: {'paddy_x2': 60.0, 'wheel': 60.0, 'wheel_x2': 60.0, 'mill': 60.0, 'mill_x2': 60.5, 'granary': 61.2, 'granary_x2': 66.1, 'all_x2': 73.4, 'merchant': 74.3, 'merchant_x2': 83.5, 'all_x3': 109.7}
+   30min: wait max=195.8 p90=4.2 | meaningful max=1512.8 p90=60.0
+   shares@600s rate=2.84e+08: {'paddy': 0.45, 'wheel': 0.02, 'mill': 0.05, 'granary': 0.13, 'merchant': 0.35}
+   shares@1800s rate=5.86e+08: {'paddy': 0.48, 'wheel': 0.02, 'mill': 0.03, 'granary': 0.07, 'merchant': 0.4}
+run8 start=12720s purchases=515 prestige=-
+   first_buy: {'paddy_x2': 60.0, 'wheel': 60.0, 'wheel_x2': 60.0, 'mill': 60.0, 'mill_x2': 60.0, 'granary': 60.1, 'all_x2': 63.0, 'granary_x2': 63.5, 'merchant': 64.2, 'merchant_x2': 68.7, 'all_x3': 79.5}
+   30min: wait max=146.8 p90=3.6 | meaningful max=660.1 p90=60.0
+   shares@600s rate=8.84e+08: {'paddy': 0.59, 'wheel': 0.03, 'mill': 0.04, 'granary': 0.09, 'merchant': 0.25}
+run2_catchup_s None never_bought []
+builtin: {"dead_upgrades": [], "walls": [], "dominant": {"dominant_gen": "merchant", "ratio": 4.554655870445344, "productions": {"paddy": 115.0, "wheel": 438.0, "mill": 2160.0, "granary": 9880.0, "merchant": 45000.0}}, "final_time": 3600.0, "n_purchases": 587, "warnings": []}

@@ -1,0 +1,2 @@
+﻿ID,名称,购买目标,间隔(秒),每次数量,条件公式
+auto_paddy,自动买稻田,paddy,10,max,balance_soul >= 1

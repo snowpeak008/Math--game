@@ -13,6 +13,24 @@ from idleframework.engine.segments import PiecewiseEngine
 from idleframework.optimizer.greedy import GreedyOptimizer, OptimizeResult
 
 
+def _purchases_from_segments(segments) -> list[PurchaseEvent]:
+    """Convert ``purchase:<id>`` segment events into PurchaseEvents.
+
+    The event is recorded on the segment that ends at purchase time. Cost is
+    not tracked per segment, so it is reported as 0.0. Extra purchases made in
+    the same epsilon window (chattering batch) are not individually recorded.
+    """
+    events: list[PurchaseEvent] = []
+    for seg in segments:
+        for ev in seg.events:
+            if ev.startswith("purchase:"):
+                t = seg.end_time if seg.end_time is not None else seg.start_time
+                events.append(
+                    PurchaseEvent(time=t, node_id=ev.split(":", 1)[1], count=1, cost=0.0)
+                )
+    return events
+
+
 class BranchAndBoundOptimizer:
     """DFS Branch-and-Bound optimizer with upper-bound pruning."""
 
@@ -31,6 +49,7 @@ class BranchAndBoundOptimizer:
         self._best_production = -1.0
         self._best_purchases: list[PurchaseEvent] = []
         self._best_engine: PiecewiseEngine | None = None
+        self._best_n_decisions = 0
 
         self._dfs(
             engine=copy.deepcopy(self._engine),
@@ -43,6 +62,7 @@ class BranchAndBoundOptimizer:
             if self._best_engine.time < target_time:
                 self._best_engine.advance_to(target_time)
             result.purchases = self._best_purchases
+            result.search_decisions = self._best_n_decisions
             result.final_production = self._best_engine.get_production_rate(self._pay_resource)
             result.final_balance = self._best_engine.get_balance(self._pay_resource)
             result.final_time = self._best_engine.time
@@ -63,13 +83,17 @@ class BranchAndBoundOptimizer:
         depth: int,
     ) -> None:
         eval_engine = copy.deepcopy(engine)
+        auto_events: list[PurchaseEvent] = []
         if eval_engine.time < self._target_time:
-            eval_engine.advance_to(self._target_time)
+            # advance_to() keeps buying with the engine's built-in policy;
+            # record those purchases so the reported sequence is complete.
+            auto_events = _purchases_from_segments(eval_engine.advance_to(self._target_time))
         current_prod = eval_engine.get_production_rate(self._pay_resource)
 
         if current_prod > self._best_production:
             self._best_production = current_prod
-            self._best_purchases = list(purchases)
+            self._best_purchases = list(purchases) + auto_events
+            self._best_n_decisions = len(purchases)
             self._best_engine = eval_engine
 
         if depth >= self._depth_limit:

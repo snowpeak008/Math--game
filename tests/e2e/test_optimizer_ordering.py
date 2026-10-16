@@ -24,7 +24,8 @@ class TestGreedyVsBaseline:
         # Baseline: just advance with initial balance, no auto-buy
         baseline = PiecewiseEngine(copy.deepcopy(game), validate=True)
         baseline.set_balance(res_id, 1e6)
-        baseline.advance_to(300.0)
+        # No purchases => production is constant; read it directly. (advance_to
+        # auto-buys; it used to stall only because initial production was 0.)
         baseline_rate = baseline.get_production_rate(res_id)
 
         # Greedy

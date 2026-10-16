@@ -1,0 +1,2 @@
+﻿ID,名称,收益公式,获得货币,层级,重置项,保留项
+rebirth,稻魂转生,"max(0, floor(sqrt(lifetime_rice / 1e+08)) - balance_soul)",soul,0,"rice, paddy, wheel, mill, granary, merchant, paddy_x2, wheel_x2, mill_x2, mill_x2b, granary_x2, all_x2, paddy_x3, all_x1_5, merchant_x2, all_x3",soul

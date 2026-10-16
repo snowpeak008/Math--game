@@ -227,9 +227,14 @@ class TestGreedyEfficiency:
         opt = GreedyOptimizer(game, state)
         eff = opt.compute_upgrade_efficiency("add_a")
 
-        # additive: bonus * (base_production / cycle_time) / cost
-        # = 50 * (10 / 1) / 200 = 2.5
-        assert eff == pytest.approx(2.5, rel=1e-6)
+        # Since 2026-10 the greedy uses the engine-measured marginal gain and
+        # ranks by payback time (balance 5000 >= cost, so wait = 0 and
+        # 1/payback == delta/cost). The engine applies an additive stacking
+        # group as multiplier (1 + 50) on gen_a (5 owned * 10/s = 50/s):
+        # delta = 50 * 51 - 50 = 2500  ->  2500 / 200 = 12.5
+        # (The old analytic heuristic gave 2.5, inconsistent with the engine.)
+        assert opt.simulated_delta("add_a") == pytest.approx(2500.0)
+        assert eff == pytest.approx(12.5, rel=1e-6)
 
 
 class TestGreedyOnMinicap:

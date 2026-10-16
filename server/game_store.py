@@ -27,8 +27,13 @@ class GameSummary(TypedDict):
 def _slugify(name: str) -> str:
     """Convert game name to URL-safe slug."""
     slug = name.lower().strip()
-    slug = re.sub(r"[^a-z0-9]+", "-", slug)
-    return slug.strip("-")
+    slug = re.sub(r"[^a-z0-9]+", "-", slug).strip("-")
+    if not slug and name.strip():
+        # Non-ASCII names (e.g. Chinese) would otherwise produce an empty ID.
+        import hashlib
+
+        slug = "game-" + hashlib.sha1(name.strip().encode("utf-8")).hexdigest()[:10]
+    return slug
 
 
 def _validate_game_id(game_id: str) -> str:

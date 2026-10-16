@@ -1,0 +1,288 @@
+{
+ "schema_version": "1.0",
+ "name": "多货币商店示例",
+ "description": "金币/钻石/荣誉值 + 专属券；金币商店(纯金币)、高级商店(金币+钻石)、荣誉商店(金币, 需荣誉值门槛不消耗)",
+ "nodes": [
+  {
+   "id": "gold",
+   "type": "resource",
+   "name": "金币",
+   "initial_value": 15
+  },
+  {
+   "id": "diamond",
+   "type": "resource",
+   "name": "钻石",
+   "initial_value": 0
+  },
+  {
+   "id": "honor",
+   "type": "resource",
+   "name": "荣誉值",
+   "initial_value": 0
+  },
+  {
+   "id": "ticket",
+   "type": "resource",
+   "name": "传说券（专属货币）",
+   "initial_value": 0
+  },
+  {
+   "id": "mine",
+   "type": "generator",
+   "name": "金矿",
+   "base_production": 1.0,
+   "cost_growth_rate": 1.12,
+   "cycle_time": 1.0,
+   "cost_base": 10
+  },
+  {
+   "id": "smelter",
+   "type": "generator",
+   "name": "熔炉",
+   "base_production": 8.0,
+   "cost_growth_rate": 1.13,
+   "cycle_time": 1.0,
+   "cost_base": 150
+  },
+  {
+   "id": "bank",
+   "type": "generator",
+   "name": "金库",
+   "base_production": 60.0,
+   "cost_growth_rate": 1.14,
+   "cycle_time": 1.0,
+   "cost_base": 2500
+  },
+  {
+   "id": "diamond_mine",
+   "type": "generator",
+   "name": "钻石矿",
+   "base_production": 0.05,
+   "cost_growth_rate": 1.35,
+   "cycle_time": 1.0,
+   "cost": [
+    {
+     "currency": "gold",
+     "amount": 400
+    }
+   ]
+  },
+  {
+   "id": "arena",
+   "type": "generator",
+   "name": "竞技场",
+   "base_production": 0.5,
+   "cost_growth_rate": 1.25,
+   "cycle_time": 1.0,
+   "cost": [
+    {
+     "currency": "gold",
+     "amount": 800
+    }
+   ]
+  },
+  {
+   "id": "ticket_press",
+   "type": "generator",
+   "name": "传说券印刷机",
+   "base_production": 0.01,
+   "cost_growth_rate": 2.0,
+   "cycle_time": 1.0,
+   "cost": [
+    {
+     "currency": "gold",
+     "amount": 20000
+    },
+    {
+     "currency": "diamond",
+     "amount": 20
+    }
+   ]
+  },
+  {
+   "id": "g_shop_mine",
+   "type": "upgrade",
+   "name": "金币商店·金矿×2",
+   "upgrade_type": "multiplicative",
+   "magnitude": 2.0,
+   "target": "mine",
+   "stacking_group": "shop",
+   "cost": 300,
+   "tags": [
+    "金币商店"
+   ]
+  },
+  {
+   "id": "g_shop_smelter",
+   "type": "upgrade",
+   "name": "金币商店·熔炉×2",
+   "upgrade_type": "multiplicative",
+   "magnitude": 2.0,
+   "target": "smelter",
+   "stacking_group": "shop",
+   "cost": 4000,
+   "tags": [
+    "金币商店"
+   ]
+  },
+  {
+   "id": "g_shop_all",
+   "type": "upgrade",
+   "name": "金币商店·全体×1.5",
+   "upgrade_type": "multiplicative",
+   "magnitude": 1.5,
+   "target": "_all",
+   "stacking_group": "shop",
+   "cost": 30000,
+   "tags": [
+    "金币商店"
+   ]
+  },
+  {
+   "id": "p_shop_bank",
+   "type": "upgrade",
+   "name": "高级商店·金库×3",
+   "upgrade_type": "multiplicative",
+   "magnitude": 3.0,
+   "target": "bank",
+   "stacking_group": "shop",
+   "cost": [
+    {
+     "currency": "gold",
+     "amount": 15000
+    },
+    {
+     "currency": "diamond",
+     "amount": 10
+    }
+   ],
+   "tags": [
+    "高级商店"
+   ]
+  },
+  {
+   "id": "p_shop_all",
+   "type": "upgrade",
+   "name": "高级商店·全体×2",
+   "upgrade_type": "multiplicative",
+   "magnitude": 2.0,
+   "target": "_all",
+   "stacking_group": "shop",
+   "cost": [
+    {
+     "currency": "gold",
+     "amount": 60000
+    },
+    {
+     "currency": "diamond",
+     "amount": 40
+    }
+   ],
+   "tags": [
+    "高级商店"
+   ]
+  },
+  {
+   "id": "h_shop_1",
+   "type": "upgrade",
+   "name": "荣誉商店·金矿×3",
+   "upgrade_type": "multiplicative",
+   "magnitude": 3.0,
+   "target": "mine",
+   "stacking_group": "shop",
+   "cost": 2000,
+   "tags": [
+    "荣誉商店"
+   ],
+   "requires": [
+    {
+     "currency": "honor",
+     "amount": 100
+    }
+   ]
+  },
+  {
+   "id": "h_shop_2",
+   "type": "upgrade",
+   "name": "荣誉商店·全体×2",
+   "upgrade_type": "multiplicative",
+   "magnitude": 2.0,
+   "target": "_all",
+   "stacking_group": "shop",
+   "cost": 50000,
+   "tags": [
+    "荣誉商店"
+   ],
+   "requires": [
+    {
+     "currency": "honor",
+     "amount": 1000
+    }
+   ]
+  },
+  {
+   "id": "legend",
+   "type": "upgrade",
+   "name": "传说·全体×5",
+   "upgrade_type": "multiplicative",
+   "magnitude": 5.0,
+   "target": "_all",
+   "stacking_group": "shop",
+   "cost": [
+    {
+     "currency": "gold",
+     "amount": 200000
+    },
+    {
+     "currency": "ticket",
+     "amount": 3
+    }
+   ],
+   "tags": [
+    "专属"
+   ]
+  }
+ ],
+ "edges": [
+  {
+   "id": "e_mine",
+   "source": "mine",
+   "target": "gold",
+   "edge_type": "production_target"
+  },
+  {
+   "id": "e_smelter",
+   "source": "smelter",
+   "target": "gold",
+   "edge_type": "production_target"
+  },
+  {
+   "id": "e_bank",
+   "source": "bank",
+   "target": "gold",
+   "edge_type": "production_target"
+  },
+  {
+   "id": "e_diamond_mine",
+   "source": "diamond_mine",
+   "target": "diamond",
+   "edge_type": "production_target"
+  },
+  {
+   "id": "e_arena",
+   "source": "arena",
+   "target": "honor",
+   "edge_type": "production_target"
+  },
+  {
+   "id": "e_ticket_press",
+   "source": "ticket_press",
+   "target": "ticket",
+   "edge_type": "production_target"
+  }
+ ],
+ "stacking_groups": {
+  "shop": "multiplicative"
+ }
+}

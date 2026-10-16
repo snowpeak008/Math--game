@@ -44,16 +44,20 @@ def validate(game_file: str) -> None:
     typer.echo(f"  Nodes: {len(game.nodes)}")
     typer.echo(f"  Edges: {len(game.edges)}")
     typer.echo(f"  Stacking groups: {len(game.stacking_groups)}")
+    from idleframework.analysis.static_checks import run_static_checks
+
+    for w in run_static_checks(game):
+        typer.echo(f"  {w['severity'].upper()} [{w['kind']}]: {w['message']}")
 
 
 @app.command()
-def analyze(game_file: str, time: float = 300.0) -> None:
+def analyze(game_file: str, time: float = 300.0, max_steps: int | None = None) -> None:
     game = _load_game(game_file)
 
     from idleframework.analysis.detectors import run_full_analysis
 
     typer.echo(f"Analyzing '{game.name}' for {time}s...")
-    report = run_full_analysis(game, simulation_time=time)
+    report = run_full_analysis(game, simulation_time=time, max_steps=max_steps)
 
     typer.echo(f"\n=== Analysis Report: {report.game_name} ===")
     typer.echo(f"Simulation time: {report.simulation_time}s")
@@ -80,6 +84,9 @@ def analyze(game_file: str, time: float = 300.0) -> None:
         typer.echo(f"  Purchases: {len(opt.purchases)}")
         typer.echo(f"  Final production: {opt.final_production:.2e}")
         typer.echo(f"  Final balance: {opt.final_balance:.2e}")
+        typer.echo(f"  Simulated until: {opt.final_time:.1f}s")
+        for w in getattr(opt, "warnings", []):
+            typer.echo(f"  WARNING: {w}")
 
 
 @app.command()

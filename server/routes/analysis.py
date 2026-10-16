@@ -43,6 +43,8 @@ class OptimizerResultResponse(BaseModel):
     final_production: float
     final_balance: float
     final_time: float
+    truncated: bool = False
+    warnings: list[str] = Field(default_factory=list)
 
 
 class AnalysisResponse(BaseModel):
@@ -142,6 +144,8 @@ def run_analysis(req: AnalysisRequest):
             "final_production": opt.final_production,
             "final_balance": opt.final_balance,
             "final_time": opt.final_time,
+            "truncated": getattr(opt, "truncated", False),
+            "warnings": list(getattr(opt, "warnings", [])),
         }
     return result
 

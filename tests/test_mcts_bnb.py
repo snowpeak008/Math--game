@@ -211,7 +211,10 @@ class TestBranchAndBound:
         result = opt.optimize(target_time=120.0, max_steps=50)
 
         assert isinstance(result, OptimizeResult)
-        assert len(result.purchases) <= 3
+        # depth_limit bounds the purchases chosen by the search itself; the
+        # engine's built-in policy may add more after that (now reported too).
+        assert result.search_decisions is not None
+        assert result.search_decisions <= 3
 
     def test_bnb_matches_exhaustive(self):
         game = _make_two_gen_game()
