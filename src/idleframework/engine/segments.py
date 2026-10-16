@@ -60,6 +60,17 @@ class Segment:
     spent: dict[str, float] = field(default_factory=dict)  # paid for purchases at segment end
 
 
+class _SharedCache(dict):
+    """Memo table shared (not copied) by deep copies of an engine.
+
+    Entries are pure functions of the static game definition and the key, so
+    copies of the same engine may safely share them.
+    """
+
+    def __deepcopy__(self, memo):
+        return self
+
+
 @dataclass
 class BuffMultipliers:
     """Resolved buff multipliers for production calculation."""
@@ -143,6 +154,9 @@ class PiecewiseEngine:
             for g in self._generators.values()
             if _re.search(rf"\bowned_{sanitize_var_name(g.id)}\b", _syn_text)
         }
+        self._rates_cacheable = not self._has_synergy and not any(
+            e.edge_type == "state_modifier" for e in game.edges
+        )
         # Look-ahead horizon for numeric time-to-afford (set by advance_to).
         self._horizon: float = float("inf")
         self._last_segment: Segment | None = None
@@ -213,7 +227,26 @@ class PiecewiseEngine:
         return rates
 
     def _generator_rates(self) -> list[tuple[str, float, list[str]]]:
-        """Per-generator (id, rate/sec, production targets) for owned generators."""
+        """Per-generator (id, rate/sec, production targets) for owned generators.
+
+        Memoised on the discrete state (owned / purchased / active flags) when
+        no rate depends on continuous state (no synergies, no state-modifier
+        edges); otherwise recomputed every call.
+        """
+        if self._rates_cacheable:
+            st = self._state
+            key = tuple((v.owned, v.purchased, v.active) for v in st.node_states.values())
+            cache = self.__dict__.setdefault("_rates_cache", _SharedCache())
+            hit = cache.get(key)
+            if hit is None:
+                hit = tuple(self._generator_rates_uncached())
+                if len(cache) > 50_000:
+                    cache.clear()
+                cache[key] = hit
+            return list(hit)
+        return self._generator_rates_uncached()
+
+    def _generator_rates_uncached(self) -> list[tuple[str, float, list[str]]]:
         out: list[tuple[str, float, list[str]]] = []
 
         # Build per-generator multiplier from upgrades
@@ -268,6 +301,18 @@ class PiecewiseEngine:
 
         Returns dict mapping generator_id -> total multiplier.
         """
+        # Depends only on which upgrades are purchased -> memoise per engine.
+        key = tuple(self._state.get(u).purchased for u in self._upgrades)
+        cache = self.__dict__.setdefault("_genmult_cache", _SharedCache())
+        hit = cache.get(key)
+        if hit is None:
+            hit = self._compute_generator_multipliers_uncached()
+            if len(cache) > 50_000:
+                cache.clear()
+            cache[key] = hit
+        return dict(hit)
+
+    def _compute_generator_multipliers_uncached(self) -> dict[str, float]:
         # Collect per-generator, per-stacking-group bonuses
         # Structure: {gen_id: {stacking_group: {"rule": ..., "bonuses": [...]}}}
         gen_groups: dict[str, dict[str, dict]] = {}
@@ -391,6 +436,8 @@ class PiecewiseEngine:
         from idleframework.engine.variables import build_state_variables
 
         synergies: dict[str, float] = {}
+        if not self._has_synergy:
+            return synergies
         variables = build_state_variables(self._game, self._state)
 
         for node in self._game.nodes:
@@ -543,7 +590,7 @@ class PiecewiseEngine:
         """
         ns = self._state.get(node_id)
         key = (node_id, ns.owned, ns.purchased, count)
-        cache = self.__dict__.setdefault("_price_cache", {})
+        cache = self.__dict__.setdefault("_price_cache", _SharedCache())
         hit = cache.get(key, False)
         if hit is not False:
             return list(hit) if hit is not None else None
@@ -923,7 +970,7 @@ class PiecewiseEngine:
 
     def _get_currency_resource_id_for(self, node_id: str) -> str | None:
         # static per game -> memoised
-        cache = self.__dict__.setdefault("_currency_cache", {})
+        cache = self.__dict__.setdefault("_currency_cache", _SharedCache())
         if node_id not in cache:
             cache[node_id] = self._get_currency_resource_id_uncached(node_id)
         return cache[node_id]

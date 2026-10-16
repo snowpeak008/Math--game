@@ -31,11 +31,13 @@ def evaluate_state_edges(
 
     Returns: {node_id: {property_name: [PropertyModification, ...]}}
     """
-    variables = build_state_variables(game, state)
     modified: dict[str, dict[str, list[PropertyModification]]] = {}
 
     # Collect and topologically sort state_modifier edges
     sm_edges = [e for e in game.edges if e.edge_type == "state_modifier" and e.formula]
+    if not sm_edges:
+        return modified  # nothing to evaluate: skip building the variable table
+    variables = build_state_variables(game, state)
     sm_edges = _topological_sort_edges(sm_edges, game)
 
     for edge in sm_edges:
