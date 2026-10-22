@@ -1,3 +1,5 @@
+"""HISTORICAL (v0.1.8): the opportunity-cost option was removed from greedy;
+this script needs v0.1.7 (git checkout 80cf7eb) to run."""
 """2a: opportunity-cost term in greedy payback. Metric: final primary production at T,
 and time to first reach the baseline (lambda=0) final production (lower = better)."""
 import sys, json, math, time, warnings, pathlib

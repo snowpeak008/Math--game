@@ -176,6 +176,17 @@ class TestSensitivityAnalysis:
         assert "perturbation_pct" in r
         assert "final_production" in r
         assert "final_balance" in r
+        assert r["metric"] == "node_time" and r["node_time"] <= 300.0 + 1e-6  # baseline reaches its own target
+
+    def test_sensitivity_fixed_T_option(self, minicap_game):
+        r = run_sensitivity_analysis(minicap_game, parameter="cost_base", perturbation_pcts=[1.0],
+                                     simulation_time=300.0, metric="fixed_T")[0]
+        assert r["metric"] == "fixed_T" and r["value"] == r["final_production"] and "node_time" not in r
+
+    def test_sensitivity_node_time_cheaper_is_faster(self, minicap_game):
+        rs = run_sensitivity_analysis(minicap_game, parameter="cost_base", perturbation_pcts=[0.5, 2.0],
+                                      simulation_time=300.0)
+        assert rs[0]["node_time"] < rs[1]["node_time"]
 
 
 class TestFullAnalysis:

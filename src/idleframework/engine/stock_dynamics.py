@@ -172,7 +172,7 @@ class _Plan:
         if s in self.ln0:
             ln = affine_log_from_ln(self.ln0[s], a, k, t1)
         elif k * t1 > 600.0 or x0 > 1e290:
-            ln = affine_log_x(x0, a, k, t1) if x0 > 0 else None
+            ln = affine_log_x(x0, a, k, t1) if (x0 > 0 or (k > 0 and x0 + a / k > 0)) else None
             if ln is None:
                 raise StockOverflowError(s, t1, ln)
         if ln is not None and ln > LN_PROXY:

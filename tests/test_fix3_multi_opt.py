@@ -169,8 +169,12 @@ def test_beam_rollout_never_below_greedy():
     g = _game()
     # v0.1.7: shadow valuation makes ~240 purchases by T=600, so use step
     # budgets that do not truncate (a truncated greedy is not the root rollout).
-    greedy = GreedyOptimizer(g).optimize(600, max_steps=1000).final_production
-    w1 = BeamSearchOptimizer(PiecewiseEngine(g), 1).optimize(600, 1000).final_production
+    go = GreedyOptimizer(g)
+    go.objective = "rate"  # same objective as beam's rollouts
+    greedy = go.optimize(600, max_steps=1000).final_production
+    w1 = BeamSearchOptimizer(PiecewiseEngine(g), 1, save_k=0).optimize(600, 1000).final_production
+    w1s = BeamSearchOptimizer(PiecewiseEngine(g), 1, branch_steps=8).optimize(600, 1000).final_production
     w2 = BeamSearchOptimizer(PiecewiseEngine(g), 2, branch_steps=8).optimize(600, 1000).final_production
-    assert w1 == pytest.approx(greedy)
+    assert w1 >= greedy - 1e-9  # root = best of shadow/legacy greedy rollouts
+    assert w1s >= greedy - 1e-9  # v0.1.11 save-for-X branches only add options
     assert w2 >= greedy - 1e-9

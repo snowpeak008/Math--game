@@ -25,12 +25,33 @@ class AnalysisReport:
     static_warnings: list[dict] = field(default_factory=list)
 
 
+DEFAULT_INITIAL_BALANCE = 50.0
+
+
+def _resolve_initial_balance(game: GameDefinition, initial_balance: float | None) -> float:
+    """Starting balance for the primary resource.
+
+    ``None`` (default) respects the JSON wallet: the primary resource's
+    ``initial_value`` if > 0, else the legacy 50. Other currencies always keep
+    their ``initial_value``, so the wallet stays consistent across currencies.
+    """
+    if initial_balance is not None:
+        return float(initial_balance)
+    for node in game.nodes:
+        if node.type == "resource":
+            iv = float(getattr(node, "initial_value", 0.0) or 0.0)
+            return iv if iv > 0 else DEFAULT_INITIAL_BALANCE
+    return DEFAULT_INITIAL_BALANCE
+
+
 def _run_greedy(
     game: GameDefinition,
     simulation_time: float,
-    initial_balance: float = 50.0,
+    initial_balance: float | None = None,
     max_steps: int | None = None,
+    objective: str = "node_time",
 ) -> OptimizeResult:
+    initial_balance = _resolve_initial_balance(game, initial_balance)
     engine = PiecewiseEngine(game)
     pay_resource = engine._get_primary_resource_id()
     if pay_resource is None:
@@ -48,6 +69,7 @@ def _run_greedy(
             break
 
     optimizer = GreedyOptimizer(game, engine.state)
+    optimizer.objective = objective
     return optimizer.optimize(target_time=simulation_time, max_steps=max_steps)
 
 
@@ -55,7 +77,7 @@ def _run_optimizer(
     game: GameDefinition,
     simulation_time: float,
     optimizer: str = "greedy",
-    initial_balance: float = 50.0,
+    initial_balance: float | None = None,
     beam_width: int = 5,
     mcts_iterations: int = 1000,
     mcts_seed: int | None = None,
@@ -67,6 +89,7 @@ def _run_optimizer(
     ``max_steps=None`` uses the greedy default (DEFAULT_MAX_STEPS) and 500 for
     the search-based optimizers. A truncation warning is attached to the result.
     """
+    initial_balance = _resolve_initial_balance(game, initial_balance)
     engine = PiecewiseEngine(game)
     pay_resource = engine._get_primary_resource_id()
     if pay_resource is None:
@@ -110,8 +133,10 @@ def _run_optimizer(
 def detect_dead_upgrades(
     game: GameDefinition,
     simulation_time: float = 600.0,
+    max_steps: int | None = None,
+    initial_balance: float | None = None,
 ) -> list[dict]:
-    result = _run_greedy(game, simulation_time)
+    result = _run_greedy(game, simulation_time, initial_balance=initial_balance, max_steps=max_steps)
     max_earnings = result.final_balance + sum(p.cost for p in result.purchases)
 
     engine = PiecewiseEngine(game)
@@ -152,12 +177,15 @@ def detect_progression_walls(
     game: GameDefinition,
     simulation_time: float = 300.0,
     sample_interval: float = 10.0,
+    max_steps: int | None = None,
+    initial_balance: float | None = None,
 ) -> list[dict]:
+    initial_balance = _resolve_initial_balance(game, initial_balance)
     engine = PiecewiseEngine(game)
     pay_resource = engine._get_primary_resource_id()
     if pay_resource is None:
         raise ValueError("Game must contain at least one resource node for analysis")
-    engine.set_balance(pay_resource, 50.0)
+    engine.set_balance(pay_resource, initial_balance)
     for gen_id in engine._generators:
         cost = bulk_cost(
             engine._generators[gen_id].cost_base,
@@ -165,12 +193,12 @@ def detect_progression_walls(
             0,
             1,
         )
-        if cost <= 50.0 and engine._affordable_now(gen_id):
+        if cost <= initial_balance and engine._affordable_now(gen_id):
             engine.purchase(gen_id, 1)
             break
 
     optimizer = GreedyOptimizer(game, engine.state)
-    result = optimizer.optimize(target_time=simulation_time)
+    result = optimizer.optimize(target_time=simulation_time, max_steps=max_steps)
 
     walls = []
 
@@ -303,20 +331,41 @@ def run_sensitivity_analysis(
     parameter: str,
     perturbation_pcts: list[float],
     simulation_time: float = 300.0,
+    metric: str = "node_time",
+    target: float | None = None,
+    horizon_factor: float = 3.0,
 ) -> list[dict]:
+    """Perturb ``parameter`` and re-optimise (greedy).
+
+    metric="node_time" (default, v0.1.11): the headline value is the node arrival time,
+    i.e. the time to reach ``target`` output (default: unperturbed output at
+    ``simulation_time``), searched up to ``horizon_factor * simulation_time``; inf if not
+    reached. metric="fixed_T": headline value is output at ``simulation_time``.
+    Both ``final_production``/``final_balance`` (fixed T) are always reported."""
+    from idleframework.analysis.sensitivity import metric_increasing, node_arrival_time
+
+    metric_increasing(metric)  # validates
+    if metric == "node_time" and target is None:
+        target = _run_greedy(game, simulation_time).final_production
     results = []
 
     for pct in perturbation_pcts:
         perturbed = _perturb_game(game, parameter, pct)
         opt_result = _run_greedy(perturbed, simulation_time)
-
-        results.append(
-            {
-                "perturbation_pct": pct,
-                "final_production": opt_result.final_production,
-                "final_balance": opt_result.final_balance,
-            }
-        )
+        row = {
+            "perturbation_pct": pct,
+            "metric": metric,
+            "final_production": opt_result.final_production,
+            "final_balance": opt_result.final_balance,
+        }
+        if metric == "node_time":
+            long = _run_greedy(perturbed, simulation_time * horizon_factor)
+            row["target"] = target
+            row["node_time"] = node_arrival_time(long, target)
+            row["value"] = row["node_time"]
+        else:
+            row["value"] = opt_result.final_production
+        results.append(row)
 
     return results
 
@@ -342,6 +391,7 @@ def run_full_analysis(
     mcts_seed: int | None = None,
     bnb_depth: int = 20,
     max_steps: int | None = None,
+    initial_balance: float | None = None,
 ) -> AnalysisReport:
     report = AnalysisReport(
         game_name=game.name,
@@ -350,9 +400,13 @@ def run_full_analysis(
 
     from idleframework.analysis.static_checks import run_static_checks
 
-    report.static_warnings = run_static_checks(game)
-    report.dead_upgrades = detect_dead_upgrades(game, simulation_time)
-    report.progression_walls = detect_progression_walls(game, simulation_time)
+    report.static_warnings = run_static_checks(game, horizon=simulation_time)
+    report.dead_upgrades = detect_dead_upgrades(
+        game, simulation_time, max_steps=max_steps, initial_balance=initial_balance
+    )
+    report.progression_walls = detect_progression_walls(
+        game, simulation_time, max_steps=max_steps, initial_balance=initial_balance
+    )
     report.dominant_strategy = detect_dominant_strategy(game, simulation_time)
     report.optimizer_result = _run_optimizer(
         game,
@@ -363,6 +417,7 @@ def run_full_analysis(
         mcts_seed=mcts_seed,
         bnb_depth=bnb_depth,
         max_steps=max_steps,
+        initial_balance=initial_balance,
     )
 
     return report

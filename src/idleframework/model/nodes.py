@@ -113,6 +113,19 @@ class NestedGenerator(NodeBase):
     cost_growth_rate: float
 
 
+class UpgradeEffect(BaseModel):
+    """Extra per-generator bonus carried by one upgrade (v0.1.12 multi-effect).
+
+    Lets a single purchase boost several generators by different amounts,
+    e.g. one skill level that adds Stone *and* Silver income. Stacks with the
+    same rules as the upgrade's own ``target``/``magnitude``.
+    """
+
+    target: str
+    magnitude: float
+    stacking_group: str | None = None  # None = the upgrade's stacking_group
+
+
 class Upgrade(NodeBase):
     type: Literal["upgrade"] = "upgrade"
     name: str
@@ -127,6 +140,16 @@ class Upgrade(NodeBase):
     # price ``cost`` in the primary currency.
     costs: list[CostEntry] | None = None
     requires: list[Requirement] = Field(default_factory=list)
+    # v0.1.9 multiplier scope: with target "_all", restrict to generators that
+    # produce into one of these resources or carry one of these tags.
+    # None = global (backward compatible).
+    targets: list[str] | None = None
+    # v0.1.12: additional (target, magnitude) bonuses applied on purchase.
+    effects: list[UpgradeEffect] | None = None
+    # v0.1.12 unlock rules enforced by the engine: purchasable only when every
+    # id in prereq_all is purchased AND (prereq_any empty or any purchased).
+    prereq_all: list[str] = Field(default_factory=list)
+    prereq_any: list[str] = Field(default_factory=list)
 
     @model_validator(mode="before")
     @classmethod

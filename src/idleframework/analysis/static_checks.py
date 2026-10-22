@@ -355,6 +355,109 @@ def check_unbounded_growth(game: GameDefinition) -> list[dict]:
     return out
 
 
-def run_static_checks(game: GameDefinition) -> list[dict]:
-    return (check_capacity(game) + check_currency_inflow(game) + check_dependency_cycles(game)
-            + check_unbounded_growth(game))
+def check_horizon_reachability(game: GameDefinition, horizon: float) -> list[dict]:
+    """v0.1.8: prices / thresholds above what is obtainable within ``horizon``.
+
+    Only for currencies whose sole sources are farm drops (their income cannot
+    be grown by purchases): upper bound = initial + sum over farms of
+    (best drop per clear x clears/s) x horizon. A price or ``requires``
+    threshold above it can never be met in this run (warning,
+    kind="price_exceeds_reachable").
+    """
+    from idleframework.model.nodes import FarmNode
+
+    out: list[dict] = []
+    farms = [n for n in game.nodes if isinstance(n, FarmNode)]
+    if not farms or not math.isfinite(horizon) or horizon <= 0:
+        return out
+    gen_targets = {e.target for e in game.edges if e.edge_type == "production_target"
+                   and isinstance(game.get_node(e.source), Generator)}
+    bound: dict[str, float] = {}
+    for f in farms:
+        if f.material in gen_targets:
+            continue
+        best = max((s.drop_per_clear for s in f.stages), default=0.0)
+        bound[f.material] = bound.get(f.material, 0.0) + best * f.clears_per_second() * horizon
+    for rid in list(bound):
+        bound[rid] += float(game.get_node(rid).initial_value or 0.0)
+    for node in game.nodes:
+        if not isinstance(node, (Generator, Upgrade)):
+            continue
+        entries = [(rid, amt, "价格") for rid, amt, _ in price_entries(game, node)] + \
+                  [(rid, amt, "门槛") for rid, amt in requirement_entries(node)]
+        for rid, amt, what in entries:
+            if rid in bound and amt > bound[rid] * (1 + 1e-12):
+                out.append({
+                    "check": "horizon_reachability", "severity": "warning", "kind": "price_exceeds_reachable",
+                    "node_id": node.id, "resource_id": rid, "amount": amt, "reachable": bound[rid], "horizon": horizon,
+                    "message": f"{_kind_zh(node)} {node.id!r} {what} {amt:.6g} {rid!r}，但 {horizon:.6g}s 内最多只能"
+                               f"获得约 {bound[rid]:.6g}（仅关卡掉落，按最高关卡满速计），本局买不到",
+                })
+    return out
+
+
+def _upgrade_generators(game: GameDefinition, u) -> set[str]:
+    gens = [n for n in game.nodes if isinstance(n, Generator)]
+    if u.target != "_all":
+        return {u.target} if any(g.id == u.target for g in gens) else set()
+    if u.targets is None:
+        return {g.id for g in gens}
+    scope = set(u.targets)
+    out = set()
+    for g in gens:
+        outs = {e.target for e in game.get_edges_from(g.id) if e.edge_type == "production_target"}
+        if outs & scope or set(g.tags) & scope:
+            out.add(g.id)
+    return out
+
+
+def check_power_coupling(game: GameDefinition) -> list[dict]:
+    """v0.1.9: one multiplier boosting both an economy currency and farm power.
+
+    Power then grows with the economy, so stage gates are passed faster than
+    their spacing suggests. ``speedup`` = the upgrade's factor on the time to
+    reach a gate (power rate x m -> time / m); ``combined`` = product over all
+    coupled multipliers.
+    """
+    from idleframework.model.nodes import FarmNode
+
+    powers = {f.power_resource for f in game.nodes if isinstance(f, FarmNode)}
+    if not powers:
+        return []
+    produces = {}
+    for g in game.nodes:
+        if isinstance(g, Generator):
+            produces[g.id] = {e.target for e in game.get_edges_from(g.id) if e.edge_type == "production_target"}
+    out, combined = [], 1.0
+    hits = []
+    for u in game.nodes:
+        if not isinstance(u, Upgrade) or u.upgrade_type != "multiplicative" or u.magnitude <= 1:
+            continue
+        res = set().union(*[produces.get(g, set()) for g in _upgrade_generators(game, u)])
+        econ, pw = res - powers, res & powers
+        if econ and pw:
+            hits.append((u, econ, pw))
+            combined *= u.magnitude
+    for u, econ, pw in hits:
+        out.append({
+            "check": "power_coupling", "severity": "warning", "kind": "economy_power_coupling",
+            "node_id": u.id, "economy": sorted(econ), "power": sorted(pw),
+            "speedup": u.magnitude, "combined_speedup": combined,
+            # gate time after purchase ~ 1/(power rate) ~ 1/g -> elasticity -1;
+            # the simulated value (analysis.coupling.clear_time_elasticity) is
+            # smaller in magnitude because g only acts after it is bought.
+            "elasticity_bound": -1.0,
+            "message": f"经济-战力耦合：乘数 {u.id!r}（x{u.magnitude:g}）同时放大 {', '.join(sorted(econ))} 与战力 "
+                       f"{', '.join(sorted(pw))}；到达关卡门槛的时间缩短为 1/{u.magnitude:g}，所有耦合乘数合计约 "
+                       f"x{combined:g} 的通关加速；通关时间弹性 dlnT/dln g 最大为 −1（购买后），实际值与各关停留时间变化可用 "
+                       "analysis.coupling.clear_time_elasticity / dwell_change 模拟得到。若想让关卡进度独立，请用 targets 限定乘数作用范围",
+        })
+    return out
+
+
+def run_static_checks(game: GameDefinition, horizon: float | None = None) -> list[dict]:
+    out = (check_capacity(game) + check_currency_inflow(game) + check_dependency_cycles(game)
+           + check_unbounded_growth(game) + check_power_coupling(game))
+    if horizon is not None:
+        out += check_horizon_reachability(game, horizon)
+    return out

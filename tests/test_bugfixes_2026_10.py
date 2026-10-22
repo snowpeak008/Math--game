@@ -57,7 +57,9 @@ def test_timeline_production_rate_is_per_step():
 # ---- Bug 2: max_steps=500 silently truncated the simulation ----
 
 def test_default_run_reaches_target_time():
-    r = _run_greedy(_minicap(), 3600)
+    # rate objective: buys every rate gain (the node-time default stops when
+    # payback >= T - t, so fewer than 500 purchases is expected there)
+    r = _run_greedy(_minicap(), 3600, objective="rate")
     assert not r.truncated
     assert r.final_time == pytest.approx(3600)
     assert len(r.purchases) > 500  # old hard cap

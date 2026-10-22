@@ -1,0 +1,26 @@
+{
+ "elasticity": {
+  "forge": {
+   "upgrade": "forge",
+   "stage": 10,
+   "t_clear": 479.5,
+   "t_clear_perturbed": 474.0,
+   "elasticity": -0.12104239706714655
+  },
+  "g_shop_all": {
+   "upgrade": "g_shop_all",
+   "stage": 10,
+   "t_clear": 479.5,
+   "t_clear_perturbed": 468.0,
+   "elasticity": -0.25470100314242056
+  },
+  "legend": {
+   "upgrade": "legend",
+   "stage": 10,
+   "t_clear": 479.5,
+   "t_clear_perturbed": 474.0,
+   "elasticity": -0.12104239706714655
+  }
+ },
+ "dwell": "第 7-10 关停留：全局乘数 38.5 s（到第 10 关） -> 限定作用范围 1295.0 s（到第 9 关）"
+}

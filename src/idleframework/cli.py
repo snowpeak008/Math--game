@@ -51,13 +51,20 @@ def validate(game_file: str) -> None:
 
 
 @app.command()
-def analyze(game_file: str, time: float = 300.0, max_steps: int | None = None) -> None:
+def analyze(
+    game_file: str,
+    time: float = 300.0,
+    max_steps: int | None = None,
+    initial_balance: float | None = None,
+) -> None:
     game = _load_game(game_file)
 
     from idleframework.analysis.detectors import run_full_analysis
 
     typer.echo(f"Analyzing '{game.name}' for {time}s...")
-    report = run_full_analysis(game, simulation_time=time, max_steps=max_steps)
+    report = run_full_analysis(
+        game, simulation_time=time, max_steps=max_steps, initial_balance=initial_balance
+    )
 
     typer.echo(f"\n=== Analysis Report: {report.game_name} ===")
     typer.echo(f"Simulation time: {report.simulation_time}s")
@@ -95,13 +102,17 @@ def report(
     output: str = "report.html",
     cdn: bool = True,
     time: float = 300.0,
+    max_steps: int | None = None,
+    initial_balance: float | None = None,
 ) -> None:
     game = _load_game(game_file)
 
     from idleframework.analysis.detectors import run_full_analysis
 
     typer.echo(f"Analyzing '{game.name}'...")
-    analysis = run_full_analysis(game, simulation_time=time)
+    analysis = run_full_analysis(
+        game, simulation_time=time, max_steps=max_steps, initial_balance=initial_balance
+    )
 
     html = _generate_html_report(analysis, cdn=cdn)
     Path(output).write_text(html)

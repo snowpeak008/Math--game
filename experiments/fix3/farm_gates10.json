@@ -1,0 +1,258 @@
+{
+ "global": {
+  "final_production": 1613880.0,
+  "trainers": 12,
+  "forge_t": 419.4,
+  "max_stage": 10,
+  "first_switch": 128.0,
+  "last_switch": 479.5,
+  "coverage": 0.1953,
+  "max_misalign_s": 0.431,
+  "switches": [
+   {
+    "t": 128.0,
+    "from": 0,
+    "to": 1,
+    "gate_cross_t": 127.569,
+    "misalign_s": 0.431
+   },
+   {
+    "t": 153.0,
+    "from": 1,
+    "to": 2,
+    "gate_cross_t": 152.569,
+    "misalign_s": 0.431
+   },
+   {
+    "t": 193.5,
+    "from": 2,
+    "to": 3,
+    "gate_cross_t": 193.46,
+    "misalign_s": 0.04
+   },
+   {
+    "t": 242.0,
+    "from": 3,
+    "to": 4,
+    "gate_cross_t": 241.702,
+    "misalign_s": 0.298
+   },
+   {
+    "t": 298.0,
+    "from": 4,
+    "to": 5,
+    "gate_cross_t": 297.702,
+    "misalign_s": 0.298
+   },
+   {
+    "t": 372.0,
+    "from": 5,
+    "to": 6,
+    "gate_cross_t": 371.616,
+    "misalign_s": 0.384
+   },
+   {
+    "t": 441.0,
+    "from": 6,
+    "to": 7,
+    "gate_cross_t": 440.825,
+    "misalign_s": 0.175
+   },
+   {
+    "t": 461.5,
+    "from": 7,
+    "to": 8,
+    "gate_cross_t": 461.475,
+    "misalign_s": 0.025
+   },
+   {
+    "t": 467.5,
+    "from": 8,
+    "to": 9,
+    "gate_cross_t": 467.401,
+    "misalign_s": 0.099
+   },
+   {
+    "t": 479.5,
+    "from": 9,
+    "to": 10,
+    "gate_cross_t": 479.253,
+    "misalign_s": 0.247
+   }
+  ],
+  "durations": [
+   {
+    "stage": 1,
+    "from_t": 128.0,
+    "duration_s": 25.0
+   },
+   {
+    "stage": 2,
+    "from_t": 153.0,
+    "duration_s": 40.5
+   },
+   {
+    "stage": 3,
+    "from_t": 193.5,
+    "duration_s": 48.5
+   },
+   {
+    "stage": 4,
+    "from_t": 242.0,
+    "duration_s": 56.0
+   },
+   {
+    "stage": 5,
+    "from_t": 298.0,
+    "duration_s": 74.0
+   },
+   {
+    "stage": 6,
+    "from_t": 372.0,
+    "duration_s": 69.0
+   },
+   {
+    "stage": 7,
+    "from_t": 441.0,
+    "duration_s": 20.5
+   },
+   {
+    "stage": 8,
+    "from_t": 461.5,
+    "duration_s": 6.0
+   },
+   {
+    "stage": 9,
+    "from_t": 467.5,
+    "duration_s": 12.0
+   },
+   {
+    "stage": 10,
+    "from_t": 479.5,
+    "duration_s": 1320.5
+   }
+  ]
+ },
+ "scoped_gold": {
+  "final_production": 1595700.0,
+  "trainers": 12,
+  "forge_t": 419.4,
+  "max_stage": 9,
+  "first_switch": 128.0,
+  "last_switch": 1305.0,
+  "coverage": 0.6539,
+  "max_misalign_s": 0.431,
+  "switches": [
+   {
+    "t": 128.0,
+    "from": 0,
+    "to": 1,
+    "gate_cross_t": 127.569,
+    "misalign_s": 0.431
+   },
+   {
+    "t": 153.0,
+    "from": 1,
+    "to": 2,
+    "gate_cross_t": 152.569,
+    "misalign_s": 0.431
+   },
+   {
+    "t": 193.5,
+    "from": 2,
+    "to": 3,
+    "gate_cross_t": 193.46,
+    "misalign_s": 0.04
+   },
+   {
+    "t": 242.0,
+    "from": 3,
+    "to": 4,
+    "gate_cross_t": 241.702,
+    "misalign_s": 0.298
+   },
+   {
+    "t": 298.0,
+    "from": 4,
+    "to": 5,
+    "gate_cross_t": 297.702,
+    "misalign_s": 0.298
+   },
+   {
+    "t": 372.0,
+    "from": 5,
+    "to": 6,
+    "gate_cross_t": 371.616,
+    "misalign_s": 0.384
+   },
+   {
+    "t": 505.0,
+    "from": 6,
+    "to": 7,
+    "gate_cross_t": 504.949,
+    "misalign_s": 0.051
+   },
+   {
+    "t": 772.0,
+    "from": 7,
+    "to": 8,
+    "gate_cross_t": 771.616,
+    "misalign_s": 0.384
+   },
+   {
+    "t": 1305.0,
+    "from": 8,
+    "to": 9,
+    "gate_cross_t": 1304.949,
+    "misalign_s": 0.051
+   }
+  ],
+  "durations": [
+   {
+    "stage": 1,
+    "from_t": 128.0,
+    "duration_s": 25.0
+   },
+   {
+    "stage": 2,
+    "from_t": 153.0,
+    "duration_s": 40.5
+   },
+   {
+    "stage": 3,
+    "from_t": 193.5,
+    "duration_s": 48.5
+   },
+   {
+    "stage": 4,
+    "from_t": 242.0,
+    "duration_s": 56.0
+   },
+   {
+    "stage": 5,
+    "from_t": 298.0,
+    "duration_s": 74.0
+   },
+   {
+    "stage": 6,
+    "from_t": 372.0,
+    "duration_s": 133.0
+   },
+   {
+    "stage": 7,
+    "from_t": 505.0,
+    "duration_s": 267.0
+   },
+   {
+    "stage": 8,
+    "from_t": 772.0,
+    "duration_s": 533.0
+   },
+   {
+    "stage": 9,
+    "from_t": 1305.0,
+    "duration_s": 495.0
+   }
+  ]
+ }
+}

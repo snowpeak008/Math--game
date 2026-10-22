@@ -463,7 +463,10 @@ class PiecewiseEngine:
             sg = node.stacking_group
             rule = self._game.stacking_groups.get(sg, "multiplicative")
 
-            if node.target == "_all":
+            if node.target == "_all" and node.targets is not None:
+                for gid in self._scoped_generators(node):
+                    gen_groups.setdefault(gid, {}).setdefault(sg, {"rule": rule, "bonuses": []})["bonuses"].append(node.magnitude)
+            elif node.target == "_all":
                 if sg not in all_groups:
                     all_groups[sg] = {"rule": rule, "bonuses": []}
                 all_groups[sg]["bonuses"].append(node.magnitude)
@@ -473,6 +476,12 @@ class PiecewiseEngine:
                 if sg not in gen_groups[node.target]:
                     gen_groups[node.target][sg] = {"rule": rule, "bonuses": []}
                 gen_groups[node.target][sg]["bonuses"].append(node.magnitude)
+            for eff in node.effects or ():
+                esg = eff.stacking_group or sg
+                erule = self._game.stacking_groups.get(esg, "multiplicative")
+                gen_groups.setdefault(eff.target, {}).setdefault(
+                    esg, {"rule": erule, "bonuses": []}
+                )["bonuses"].append(eff.magnitude)
 
         # Compute final multiplier per generator
         result: dict[str, float] = {}
@@ -737,6 +746,29 @@ class PiecewiseEngine:
 
     # -- Prices (multi-currency) ---------------------------------------------
 
+    def _locked(self, node_id: str) -> bool:
+        """v0.1.12: True if an upgrade's prereq_all / prereq_any are not met."""
+        node = self._game.get_node(node_id)
+        pa = getattr(node, "prereq_all", None)
+        py = getattr(node, "prereq_any", None)
+        if not pa and not py:
+            return False
+        st = self._state
+        if pa and not all(st.get(i).purchased for i in pa):
+            return True
+        return bool(py) and not any(st.get(i).purchased for i in py)
+
+    def missing_prereqs(self, node_id: str) -> list[str] | None:
+        """Unpurchased prerequisites to unlock node_id (cheapest any-option picked
+        by caller). Returns [] if unlocked; None if not an upgrade with prereqs."""
+        node = self._game.get_node(node_id)
+        st = self._state
+        miss = [i for i in getattr(node, "prereq_all", None) or [] if not st.get(i).purchased]
+        py = getattr(node, "prereq_any", None) or []
+        if py and not any(st.get(i).purchased for i in py):
+            miss.append(tuple(py))  # any-of group
+        return miss
+
     def _price(self, node_id: str, count: int = 1) -> list[tuple[str, float]] | None:
         """Price of the next ``count`` units as [(currency_id, amount)].
 
@@ -744,6 +776,8 @@ class PiecewiseEngine:
         node's inferred currency; ``costs`` lists may mix currencies. Returns
         None for an already-purchased upgrade or a non-purchasable node.
         """
+        if self._locked(node_id):
+            return None
         ns = self._state.get(node_id)
         key = (node_id, ns.owned, ns.purchased, count)
         cache = self._memo("_price_cache")
@@ -865,6 +899,10 @@ class PiecewiseEngine:
     # power heuristic.
     valuation: str = "shadow"
     valuation_target: float | None = None  # absolute end time for threshold values
+    # Multiplier expectation (see _lookahead_mult). v0.1.10: default formula
+    # "product" (v0.1.8); "time_weighted" (v0.1.9) is an option.
+    lookahead: bool = False
+    lookahead_formula: str = "product"
 
     def _effective_cost(
         self, node_id: str, price, net_rates, ref: str | None = None
@@ -879,6 +917,16 @@ class PiecewiseEngine:
         comps = [(c, a) for c, a in price if a > 0]
         if not comps:
             return 0.0, None
+        weights = self._game.valuation_weights
+        if weights is not None:
+            p = self._get_primary_resource_id()
+
+            def _t(ca):
+                r = net_rates.get(ca[0], 0.0)
+                return ca[1] / r if r > 0 else float("inf")
+
+            return (sum(a * weights.get(c, 1.0 if c == p else 0.0) for c, a in comps),
+                    max(comps, key=_t)[0])
         if len(comps) == 1:
             return comps[0][1], comps[0][0]
 
@@ -1068,6 +1116,63 @@ class PiecewiseEngine:
                     out.add(f.power_resource)
         return out
 
+    def _lookahead_mult(self, gen_id: str) -> float:
+        """Time-weighted multiplier expectation (v0.1.9).
+
+        V = dr * [(t1 - t) + sum_k (t_{k+1} - t_k) * prod_{i<=k} m_i], t_{K+1} = T,
+        t_k = earliest affordable time of the k-th follow-up multiplicative
+        upgrade on gen_id (or _all) from the current state and rates (the
+        optimistic, independent time bound used by BnB). Returns
+        V / (dr * (T - t)), the factor applied to the producer's primary gain.
+        """
+        end = self.valuation_target
+        if end is None or not math.isfinite(end) or end <= self._time:
+            return 1.0
+        _, net = self._compute_net_rates()
+        ups = []
+        for u in self._game.nodes:
+            if not isinstance(u, Upgrade) or u.upgrade_type != "multiplicative" or not self._mult_applies(u, gen_id):
+                continue
+            if self._state.get(u.id).purchased:
+                continue
+            price = self._price(u.id)
+            if price is None:
+                continue
+            w = self._time_until_affordable(u.id, price, net)
+            if w is not None and self._time + w < end:
+                ups.append((self._time + w, u.magnitude))
+        if not ups:
+            return 1.0
+        if self.lookahead_formula == "product":
+            m = 1.0
+            for _, mk in ups:
+                m *= mk
+            return m
+        ups.sort()
+        times = [t for t, _ in ups] + [end]
+        v, m = times[0] - self._time, 1.0
+        for k, (tk, mk) in enumerate(ups):
+            m *= mk
+            v += (times[k + 1] - tk) * m
+        return v / (end - self._time)
+
+    def _mult_applies(self, u, gen_id: str) -> bool:
+        if u.target == "_all" and u.targets is not None:
+            return gen_id in self._scoped_generators(u)
+        return u.target in (gen_id, "_all")
+
+    def _scoped_generators(self, u) -> set[str]:
+        """Generators an ``_all`` upgrade with ``targets`` applies to."""
+        scope = set(u.targets or ())
+        out = set()
+        for g in self._game.nodes:
+            if not isinstance(g, Generator):
+                continue
+            outs = {e.target for e in self._game.get_edges_from(g.id) if e.edge_type == "production_target"}
+            if outs & scope or set(g.tags) & scope:
+                out.add(g.id)
+        return out
+
     def _valued_delta(self, node) -> float:
         """Production gain in primary-currency units (multi-currency games).
 
@@ -1094,6 +1199,12 @@ class PiecewiseEngine:
             finally:
                 ns.purchased = False
         r_p = before.get(p, 0.0)
+        weights = self._game.valuation_weights
+        if weights is not None:
+            return sum(
+                (after.get(c, 0.0) - before.get(c, 0.0)) * weights.get(c, 1.0 if c == p else 0.0)
+                for c in set(before) | set(after)
+            )
         if self.valuation == "shadow":
             from idleframework.engine import shadow
 
@@ -1106,6 +1217,8 @@ class PiecewiseEngine:
                     total += d
                 elif not any(f.power_resource == c for f in self._farms):
                     total += d * shadow.weight(self, c, before.get(c, 0.0), d, r_p)
+            if self.lookahead and isinstance(node, Generator):
+                total += (after.get(p, 0.0) - before.get(p, 0.0)) * (self._lookahead_mult(node.id) - 1.0)
             return total + shadow.power_value(self, before, after, r_p)
         needed = self._needed_currencies()
         total = 0.0
@@ -1298,6 +1411,8 @@ class PiecewiseEngine:
             raise ValueError(f"Already purchased upgrade {node_id!r}")
         if not isinstance(node, (Generator, Upgrade)):
             raise ValueError(f"{node_id!r} is not purchasable")
+        if self._locked(node_id):
+            raise ValueError(f"Upgrade {node_id!r} is locked (prereq_all / prereq_any not met)")
         price = self._price(node_id, count if isinstance(node, Generator) else 1)
         for cid, amt in self._requirements(node_id):
             if self._balance(cid) < amt:

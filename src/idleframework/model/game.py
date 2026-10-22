@@ -31,6 +31,12 @@ class GameDefinition(BaseModel):
     tie_breaking: str = "lowest_cost"
     event_epsilon: float = 0.001
     free_purchase_threshold: float = 1e-5
+    # v0.1.12: optional linear valuation for multi-currency purchase decisions.
+    # {resource_id: weight in primary-currency units}. When set, an item's value
+    # = sum_c w_c * d(rate_c) and its effective cost = sum_c w_c * amount_c;
+    # costs are still paid in the real currencies. Missing currencies weigh 0
+    # (the primary currency defaults to 1).
+    valuation_weights: dict[str, float] | None = None
 
     @model_validator(mode="after")
     def _validate_game(self) -> GameDefinition:
@@ -80,6 +86,25 @@ class GameDefinition(BaseModel):
                     f"Target {node.target!r} on upgrade {node.id!r} "
                     f"does not reference a valid node ID"
                 )
+            if isinstance(node, Upgrade):
+                for pid in list(node.prereq_all) + list(node.prereq_any):
+                    if pid not in node_ids:
+                        raise ValueError(
+                            f"Prerequisite {pid!r} on upgrade {node.id!r} "
+                            f"does not reference a valid node ID"
+                        )
+            if isinstance(node, Upgrade) and node.effects:
+                for eff in node.effects:
+                    if eff.target not in node_ids:
+                        raise ValueError(
+                            f"Effect target {eff.target!r} on upgrade {node.id!r} "
+                            f"does not reference a valid node ID"
+                        )
+                    if eff.stacking_group and eff.stacking_group not in self.stacking_groups:
+                        raise ValueError(
+                            f"Effect stacking_group {eff.stacking_group!r} on upgrade "
+                            f"{node.id!r} is not defined"
+                        )
 
     def _validate_stacking_groups(self) -> None:
         for node in self.nodes:

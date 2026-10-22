@@ -18,6 +18,8 @@ holds for callers.  delta_production per candidate type:
 
 from __future__ import annotations
 
+import math
+
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
@@ -75,10 +77,6 @@ class GreedyOptimizer:
         self.game = game
         self.engine = PiecewiseEngine(game, state)
         self.steps: list[PurchaseStep] = []
-        # Opportunity cost of waiting (experiment, fix3/2a). 0 = classic payback.
-        #   oc_mode "wait":   payback += oc_lambda * wait
-        #   oc_mode "income": payback += oc_lambda * wait * income / delta
-        self.oc_lambda: float = 0.0
         # fix3/A: reservation ledger for greedy's committed target. Off by
         # default: with it on, game autobuyers can only spend surplus above
         # the target price, which starves them whenever greedy is saving.
@@ -86,7 +84,12 @@ class GreedyOptimizer:
         # fix3/F baseline policy "save to X then buy": a single-currency
         # purchase waits until balance >= cost + save_floor. 0 = off.
         self.save_floor = 0.0
-        self.oc_mode: str = "wait"
+        # v0.1.9 #9: objective. "node_time" (default; the intent layer fits
+        # node arrival times) and "balance" apply the endgame rule "buy only
+        # if payback < T - t"; "rate" (final production rate at T) buys any
+        # rate-increasing item. endgame_rule=None follows the objective.
+        self.objective = "node_time"
+        self.endgame_rule: bool | None = None
         self._autobuyer_targets: set[str] = set()
         for node in self.game.nodes:
             if isinstance(node, AutobuyerNode):
@@ -201,9 +204,6 @@ class GreedyOptimizer:
             return 0.0
         cost, _ = eng._effective_cost(node_id, price, net, ref=eng._get_primary_resource_id())
         pb = wait + (cost / delta_prod if cost > 0 else 0.0)
-        if self.oc_lambda:
-            p = eng._get_primary_resource_id()
-            pb += self._oc_term(wait, net.get(p, 0.0), delta_prod)
         if pb == float("inf"):
             return 0.0
         return float("inf") if pb <= 0 else 1.0 / pb
@@ -224,59 +224,7 @@ class GreedyOptimizer:
         if short > 0 and rate <= 0:
             return float("inf")
         wait = short / rate if short > 0 else 0.0
-        if self.oc_mode == "derivative":
-            net_gain = delta_prod - self._stock_income_loss(cost, balance)
-            if net_gain <= 0:
-                return float("inf")
-            return wait + cost / net_gain
-        return wait + cost / delta_prod + self._oc_term(wait, rate, delta_prod)
-
-    def stock_interest_rate(self) -> float:
-        """k = dI/dx: primary income gained per unit of held primary stock
-        (central difference at the current balance; 0 without stock link)."""
-        eng = self.engine
-        if not eng._stock.enabled:
-            return 0.0
-        p = eng._get_primary_resource_id()
-        b = eng.get_balance(p)
-        h = max(1e-6, 1e-6 * b)
-        lo = eng._stock.net_rates_with({p: max(0.0, b - h)}).get(p, 0.0)
-        hi = eng._stock.net_rates_with({p: b + h}).get(p, 0.0)
-        return (hi - lo) / (b + h - max(0.0, b - h))
-
-    def beats_interest(self, cost: float, delta_income: float) -> bool:
-        """Comparison rule: buy iff delta_income / cost > k (k = dI/dx).
-
-        Spending c forgoes k*c income per second; the purchase adds
-        delta_income. Reference rule for the penalty form (not adopted, see
-        PROGRESS_fix3 2a/F)."""
-        return cost > 0 and delta_income / cost > self.stock_interest_rate()
-
-    def _stock_income_loss(self, cost: float, balance: float) -> float:
-        """Primary income lost by spending ``cost`` (fix3/F, oc_mode "derivative").
-
-        lambda = d(income)/d(stock) is derived from the game, not tuned: the
-        loss is the secant I(B) - I(B - cost) at the balance B = max(balance,
-        cost) held at purchase time. For a linear stock-linked income
-        (I = k * stock) this is exactly k * cost; without stock-linked
-        income it is 0 and the score equals plain payback. The loss is
-        treated as permanent, which overstates it when the stock regrows.
-        """
-        eng = self.engine
-        if not eng._stock.enabled:
-            return 0.0
-        p = eng._get_primary_resource_id()
-        b = max(balance, cost)
-        hi = eng._stock.net_rates_with({p: b}).get(p, 0.0)
-        lo = eng._stock.net_rates_with({p: b - cost}).get(p, 0.0)
-        return max(0.0, hi - lo)
-
-    def _oc_term(self, wait: float, rate: float, delta_prod: float) -> float:
-        if self.oc_lambda == 0.0 or wait <= 0:
-            return 0.0
-        if self.oc_mode == "income":
-            return self.oc_lambda * wait * rate / delta_prod if delta_prod > 0 else float("inf")
-        return self.oc_lambda * wait
+        return wait + cost / delta_prod
 
     def _payback_score(self, cost: float, delta_prod: float) -> float:
         pb = self.payback_time(cost, delta_prod)
@@ -376,8 +324,11 @@ class GreedyOptimizer:
         """
         best_id: str | None = None
         best_eff = -1.0
+        skip = getattr(self, "_unreachable", set())
 
         for node in self.game.nodes:
+            if node.id in skip:
+                continue
             if isinstance(node, Generator):
                 if node.id in self._active_autobuyer_targets():
                     continue
@@ -395,9 +346,72 @@ class GreedyOptimizer:
                     best_eff = eff
                     best_id = node.id
 
+        if self.unlock_credit > 0:
+            cid, ceff = self._best_unlock_credit()
+            if cid is not None and ceff > best_eff:
+                best_id, best_eff = cid, ceff
+
         if best_id is None or best_eff <= 0:
             return None
         return (best_id, best_eff)
+
+    # v0.1.12 path-opening: credit a locked child's value to the prerequisite
+    # that unlocks it. score = unlock_credit / payback(bundle), where bundle =
+    # missing prerequisites (each must be purchasable now, <= 2 of them) + child,
+    # payback = wait(sum of prices) + effective_cost(sum) / value(child).
+    unlock_credit: float = 1.0
+    unlock_max_missing: int = 2
+
+    def _best_unlock_credit(self) -> tuple[str | None, float]:
+        eng = self.engine
+        if not any(getattr(n, "prereq_all", None) or getattr(n, "prereq_any", None)
+                   for n in self.game.nodes if isinstance(n, Upgrade)):
+            return None, 0.0
+        best_id, best = None, 0.0
+        _, net = eng._compute_net_rates()
+        for node in self.game.nodes:
+            if not isinstance(node, Upgrade) or eng.state.get(node.id).purchased:
+                continue
+            if not eng._locked(node.id):
+                continue
+            miss = eng.missing_prereqs(node.id)
+            if not miss or len(miss) > self.unlock_max_missing:
+                continue
+            chosen = []
+            for m in miss:
+                opts = list(m) if isinstance(m, tuple) else [m]
+                opts = [o for o in opts if eng._price(o) is not None]
+                if not opts:
+                    chosen = None
+                    break
+                chosen.append(min(opts, key=lambda o: eng._effective_cost(
+                    o, eng._price(o), net, ref=eng._get_primary_resource_id())[0]))
+            if not chosen:
+                continue
+            value = eng._valued_delta(node)
+            if value <= 0:
+                continue
+            merged: dict[str, float] = {}
+            for i in chosen + [node.id]:
+                price = eng._price(i) if i != node.id else [
+                    (c.currency, float(c.amount)) for c in (node.costs or [])] or [
+                    (eng._get_currency_resource_id_for(node.id), float(node.cost))]
+                for c, a in price or []:
+                    merged[c] = merged.get(c, 0.0) + a
+            price = list(merged.items())
+            if any(r <= 0 for _, _, _, r in eng._wait_parts(chosen[0], price, net)):
+                continue
+            wait = eng._time_until_affordable(chosen[0], price, net)
+            if wait is None:
+                continue
+            cost, _ = eng._effective_cost(chosen[0], price, net, ref=eng._get_primary_resource_id())
+            pb = wait + cost / value
+            if pb <= 0 or pb == float("inf"):
+                continue
+            score = self.unlock_credit / pb
+            if score > best:
+                best, best_id = score, chosen[0]
+        return best_id, best
 
     def total_production_rate(self) -> float:
         """Current total production rate across all resources."""
@@ -434,6 +448,16 @@ class GreedyOptimizer:
             self.engine._accumulate(rates, dt)
             self.engine._time = until
             self.engine.state.elapsed_time = until
+
+    def _reachable_by(self, node_id: str, target_time: float) -> bool:
+        """Can node_id be afforded by target_time at current net rates (no buys meanwhile)?"""
+        eng = self.engine
+        price = eng._price(node_id)
+        if price is None or eng._affordable_now(node_id, price):
+            return True
+        _, net = eng._compute_net_rates()
+        wait = eng._time_until_affordable(node_id, price, net)
+        return wait is not None and eng.current_time + wait <= target_time
 
     def _wait_multi(self, node_id: str, target_time: float | None) -> bool:
         """Wait (with autobuyers) until every cost/requirement of node_id is met.
@@ -473,16 +497,34 @@ class GreedyOptimizer:
         currency_id = self.engine._get_primary_resource_id()
         self.hit_max_steps = False
         self.engine.valuation_target = target_time  # shadow prices: horizon
+        # v0.1.11 'save for X': a target that cannot be afforded before T is
+        # dropped (not waited for) and the next-best item becomes the saving
+        # target; the set is cleared after every purchase (rates change).
+        self._unreachable = set()
 
         for i in range(max_steps):
             best = self.find_best_purchase()
             if best is None or currency_id is None:
                 break
             node_id, efficiency = best
+            # v0.1.9 #9 endgame rule (shadow valuation): buy only if the
+            # payback time is shorter than the time left.
+            endgame = self.endgame_rule if self.endgame_rule is not None else self.objective != "rate"
+            if (endgame and target_time is not None
+                    and efficiency > 0 and 1.0 / efficiency >= target_time - self.engine.current_time):
+                break
 
             node = self.game.get_node(node_id)
             ns = self.engine.state.get(node_id)
             if self._is_multi(node):
+                filler = self._slack_filler(node_id)
+                if filler is not None:
+                    # v0.1.8: spend slack that does not delay the target
+                    node_id, efficiency = filler
+                    node = self.game.get_node(node_id)
+                if target_time is not None and not self._reachable_by(node_id, target_time):
+                    self._unreachable.add(node_id)
+                    continue
                 if self.reserve_targets:
                     self.engine.reserve_for(node_id)
                 ok = self._wait_multi(node_id, target_time)
@@ -511,6 +553,7 @@ class GreedyOptimizer:
                         payback=payback,
                     )
                 )
+                self._unreachable.clear()
                 if target_time is not None and self.engine.current_time >= target_time:
                     break
                 continue
@@ -525,6 +568,15 @@ class GreedyOptimizer:
             else:
                 break
 
+            if target_time is not None:
+                bal0 = self.engine.state.get(currency_id).current_value
+                r0 = self.engine.compute_production_rates().get(currency_id, 0.0)
+                need0 = cost + self.save_floor
+                if bal0 < need0:
+                    w0 = self.engine._time_to_afford(currency_id, need0, bal0, r0) if r0 > 0 else None
+                    if w0 is None or self.engine.current_time + w0 > target_time:
+                        self._unreachable.add(node_id)
+                        continue
             # Wait (with autobuyers) until affordable or target_time reached
             gave_up = False
             guard = 0
@@ -578,6 +630,7 @@ class GreedyOptimizer:
                     payback=payback,
                 )
             )
+            self._unreachable.clear()
 
             if target_time is not None and self.engine.current_time >= target_time:
                 break
@@ -594,6 +647,71 @@ class GreedyOptimizer:
 
         self.steps.extend(steps)
         return steps
+
+    def _slack_filler(self, target_id: str) -> tuple[str, float] | None:
+        """Best item affordable now whose price leaves the target's wait unchanged.
+
+        v0.1.8 (shadow valuation only): while waiting for a target bound by a
+        slow currency (e.g. forge on material), greedy used to hoard the fast
+        one (gold). An item is a filler if, for every cost currency c of the
+        target, (need_c - (balance_c - spend_c)) / r_c <= target wait.
+        """
+        eng = self.engine
+        if eng.valuation != "shadow":
+            return None
+        price = eng._price(target_id)
+        if price is None:
+            return None
+        _, net = eng._compute_net_rates()
+        W = eng._time_until_affordable(target_id, price, net)
+        if not W or W <= 0 or not math.isfinite(W):
+            return None
+        need = {c: a for c, a in price if c and a > 0}
+        # v0.1.9 #8: per target currency c, t_target(c) = time the OTHER
+        # constraints (e.g. material arrival, thresholds) need; only the c
+        # portion of the target is reserved. Allowed iff
+        #   x_c - spend_c + r'_c * t_target(c) >= need_c   (r' after the buy).
+        waits = {}
+        for c, amt, bal, r in eng._wait_parts(target_id, price, net):
+            t = eng._time_to_afford(c, amt, bal, r)
+            waits[c] = math.inf if t is None else t
+        t_other = {c: max([w for cc, w in waits.items() if cc != c] + [0.0]) for c in need}
+        best = None
+        for n in self.game.nodes:
+            if n.id == target_id or not isinstance(n, (Generator, Upgrade)):
+                continue
+            if isinstance(n, Upgrade) and eng.state.get(n.id).purchased:
+                continue
+            if n.id in eng._autobuyer_targets:
+                continue
+            pr = eng._price(n.id)
+            if pr is None or not eng._affordable_now(n.id):
+                continue
+            spend = {c: a for c, a in pr if c in need and a > 0}
+            if spend:
+                ns = eng.state.get(n.id)
+                if isinstance(n, Generator):
+                    ns.owned += 1
+                else:
+                    ns.purchased = True
+                try:
+                    _, net2 = eng._compute_net_rates()
+                finally:
+                    if isinstance(n, Generator):
+                        ns.owned -= 1
+                    else:
+                        ns.purchased = False
+                ok = all(eng._balance(c) - a + (max(net2.get(c, 0.0), 0.0) * t_other[c] if net2.get(c, 0.0) > 0 else 0.0) >= need[c] * (1 - 1e-12)
+                         for c, a in spend.items())
+                if not ok:
+                    continue
+            d = self.simulated_delta(n.id)
+            if d <= 0:
+                continue
+            eff = self._multi_payback_score(n.id, d) if self._is_multi(n) else 1.0 / max(self.payback_time(sum(a for _, a in pr), d), 1e-300)
+            if eff > 0 and (best is None or eff > best[1]):
+                best = (n.id, eff)
+        return best
 
     def _multi_candidate(self, node) -> dict | None:
         """Candidate dict for a multi-currency / gated item (fix3/2c).

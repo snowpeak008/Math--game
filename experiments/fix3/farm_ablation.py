@@ -61,7 +61,7 @@ def one(job):
     G = GameDefinition.model_validate(BASE if kw is None else build(**kw))
     t = time.time()
     if opt == "greedy":
-        o = GreedyOptimizer(G); r = o.optimize(T, max_steps=1000); eng = o.engine
+        o = GreedyOptimizer(G); o.objective = "rate"; r = o.optimize(T, max_steps=1000); eng = o.engine
     else:
         eng = PiecewiseEngine(G); r = BeamSearchOptimizer(eng, 3).optimize(T, 1000)
     b = [p.node_id for p in r.purchases]

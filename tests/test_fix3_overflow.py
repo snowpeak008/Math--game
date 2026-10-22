@@ -44,6 +44,7 @@ def _stock_linear_greedy(T):
     st = GameState.from_game(g)
     st.get("g1").owned = 1
     o = GreedyOptimizer(g, st)
+    o.objective = "rate"  # v0.1.9: keep buying to T (drives the run past float range)
     return o, o.optimize(target_time=T)
 
 

@@ -25,16 +25,18 @@ def sp():
 @pytest.mark.parametrize("T,thr,zc", [(150.0, 30, 10), (150.0, 30, 20), (200.0, 30, 20)])
 def test_shadow_reproduces_exhaustive(sp, T, thr, zc):
     r = sp.job((T, thr, zc))
-    assert r["shadow"]["same_seq"] and r["shadow"]["optimal"]
-    assert not r["shadow"]["Z_before_U"]
+    assert r["shadow"]["optimal"] and not r["shadow"]["Z_before_U"]
+    assert max(r["shadow"]["arrival_rel_err"]) <= 0.05
+    assert r["beam3"]["optimal"]
 
 
 @pytest.mark.parametrize("T", [100.0, 200.0, 300.0])
 @pytest.mark.parametrize("thr", [20, 30, 50])
 def test_shadow_never_spends_threshold_currency_early(sp, T, thr):
     """honor is U's threshold currency: no honor is spent (on Z) before U."""
-    seq, _, early = sp.greedy(sp.game(zc=10, thr=thr), T, "shadow")
-    assert not early, seq
+    G = sp.game(zc=10, thr=thr)
+    seq = sp.run_variant(G, T, "shadow")
+    assert not sp.replay(G, T, seq)[1], seq
 
 
 def test_requires_value_zero_after_threshold(sp):
@@ -72,3 +74,24 @@ def test_farm_power_shadow_price():
     r = GreedyOptimizer(GameDefinition.model_validate(F.build())).optimize(F.T, max_steps=1000)
     b = [p.node_id for p in r.purchases]
     assert "forge" in b and 1 <= b.count("trainer") <= 5
+
+
+@pytest.mark.parametrize("T,thr,zc", [(100.0, 30, 10), (200.0, 50, 20)])
+def test_beam_root_at_least_legacy_and_shadow_greedy(sp, T, thr, zc):
+    """v0.1.9 #4: beam incumbent = better of shadow- and legacy-greedy."""
+    from idleframework.engine.segments import PiecewiseEngine
+    from idleframework.optimizer.beam import BeamSearchOptimizer
+    from idleframework.optimizer.greedy import GreedyOptimizer
+
+    G = sp.game(zc=zc, thr=thr)
+    vals = {}
+    for v in ("shadow", "legacy"):
+        PiecewiseEngine.valuation = v
+        try:
+            go = GreedyOptimizer(G, sp.fresh(G).state)
+            go.objective = "rate"
+            vals[v] = go.optimize(T, max_steps=50).final_production
+        finally:
+            PiecewiseEngine.valuation = "shadow"
+    b = BeamSearchOptimizer(sp.fresh(G), 1, branch_steps=0).optimize(T, 50).final_production
+    assert b >= max(vals.values()) - 1e-9

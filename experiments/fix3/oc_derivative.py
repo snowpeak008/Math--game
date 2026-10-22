@@ -1,3 +1,5 @@
+"""HISTORICAL (v0.1.8): the opportunity-cost option was removed from greedy;
+this script needs v0.1.7 (git checkout 80cf7eb) to run."""
 """fix3/F: 2a redo. Greedy with lambda = d(income)/d(stock) auto-derived
 (oc_mode "derivative") vs baseline greedy vs grid-searched "save to X then
 buy" on stock_linear and stock_log. Metric: arrival time of the first g5 and

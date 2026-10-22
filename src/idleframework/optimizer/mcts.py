@@ -66,6 +66,7 @@ class MCTSOptimizer:
         consecutive_failures = 0
         while step_count < max_steps and self._engine.time < target_time:
             greedy = GreedyOptimizer(self._engine._game, copy.deepcopy(self._engine.state))
+            greedy.objective = "rate"
             candidates = greedy.get_candidates()
             candidates = [c for c in candidates if c["efficiency"] > 0 and c.get("wait", 0.0) != float("inf")]
 
@@ -174,6 +175,7 @@ class MCTSOptimizer:
 
             while node.children and depth < self._rollout_depth:
                 sim_greedy = GreedyOptimizer(sim_engine._game, copy.deepcopy(sim_engine.state))
+                sim_greedy.objective = "rate"
                 sim_candidates = sim_greedy.get_candidates()
                 sim_candidates = [c for c in sim_candidates if c["efficiency"] > 0 and c.get("wait", 0.0) != float("inf")]
                 if not sim_candidates:
@@ -316,6 +318,8 @@ class MCTSOptimizer:
                 break
 
             greedy = GreedyOptimizer(engine._game, copy.deepcopy(engine.state))
+
+            greedy.objective = "rate"
             candidates = greedy.get_candidates()
             candidates = [c for c in candidates if c["efficiency"] > 0 and c.get("wait", 0.0) != float("inf")]
             if not candidates:

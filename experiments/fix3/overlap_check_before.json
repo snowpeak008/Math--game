@@ -1,0 +1,52 @@
+{
+ "small": {
+  "code_agreement_mean": 1.0,
+  "true_overlap_mean": 0.5833333333333334,
+  "gens_true_overlap_below_0.8": 0.9333333333333333,
+  "full_beam_fraction": 0.0,
+  "tau": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "loss_beam": 4.8814808562594164e-08,
+  "beam_evals": 61
+ },
+ "large": {
+  "code_agreement_mean": 0.9666666666666667,
+  "true_overlap_mean": 0.5833333333333334,
+  "gens_true_overlap_below_0.8": 0.9333333333333333,
+  "full_beam_fraction": 0.06666666666666667,
+  "tau": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "loss_beam": 4.753688926670454e-07,
+  "beam_evals": 51
+ }
+}

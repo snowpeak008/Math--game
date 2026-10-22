@@ -1,0 +1,22 @@
+{
+ "one_time_forge_x3": {
+  "minus50": 0.0,
+  "plus50": 0.010037921035021213,
+  "asymmetry": 1.0,
+  "base": 1613880.0,
+  "minus": 1613880.0,
+  "plus": 1630080.0,
+  "sensitive": false,
+  "flag": false
+ },
+ "repeatable_forge": {
+  "minus50": -0.6150973862145523,
+  "plus50": -0.04768392370572205,
+  "asymmetry": 0.9224774405250206,
+  "base": 2675430.0,
+  "minus": 1029780.0,
+  "plus": 2547855.0,
+  "sensitive": true,
+  "flag": true
+ }
+}

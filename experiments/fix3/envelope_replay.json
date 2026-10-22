@@ -1,0 +1,37 @@
+[
+ {
+  "d_src": 1.0,
+  "d": 1.25,
+  "value_src_at_src": 2683935.0,
+  "replay_at_d": 2683935.0,
+  "solver_at_d": 2755923.75
+ },
+ {
+  "d_src": 1.0,
+  "d": 1.5,
+  "value_src_at_src": 2683935.0,
+  "replay_at_d": 2683935.0,
+  "solver_at_d": 2789943.75
+ },
+ {
+  "d_src": 1.25,
+  "d": 1.5,
+  "value_src_at_src": 2755923.75,
+  "replay_at_d": 2755923.75,
+  "solver_at_d": 2789943.75
+ },
+ {
+  "d_src": 0.6579,
+  "d": 0.9737,
+  "value_src_at_src": 1754865.0,
+  "replay_at_d": 1754865.0,
+  "solver_at_d": 1798605.0
+ },
+ {
+  "d_src": 1.6,
+  "d": 2.0,
+  "value_src_at_src": 4187193.75,
+  "replay_at_d": 4187193.75,
+  "solver_at_d": 4280596.875
+ }
+]

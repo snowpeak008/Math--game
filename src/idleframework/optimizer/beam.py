@@ -15,10 +15,17 @@ from idleframework.engine.segments import PiecewiseEngine
 from idleframework.optimizer.greedy import GreedyOptimizer, OptimizeResult
 
 
+# v0.1.8 defaults (docs-zh/优化器说明.md §2): w=3 reaches the best result on
+# the 30 shadow-vs-exhaustive configs and ~98% of the best minicap gain at
+# ~1/5 of w=8's time; w=5 for batch / inverse runs.
+BEAM_WIDTH_INTERACTIVE = 3
+BEAM_WIDTH_BATCH = 5
+
+
 class BeamSearchOptimizer:
     """Beam search purchase optimizer — maintains top-K states at each step."""
 
-    def __init__(self, engine: PiecewiseEngine, beam_width: int = 5, engine_autobuy: bool = False, rank: str = "rollout", rollout_steps: int = 2000, branch_steps: int = 32):
+    def __init__(self, engine: PiecewiseEngine, beam_width: int = BEAM_WIDTH_INTERACTIVE, engine_autobuy: bool = False, rank: str = "rollout", rollout_steps: int = 2000, branch_steps: int = 32, objective: str = "rate", save_k: int = 2):
         self._engine = engine
         self.engine_autobuy = engine_autobuy
         # fix3/A: branch ranking. Branches sit at different times, so raw
@@ -31,6 +38,11 @@ class BeamSearchOptimizer:
         # plan seen is returned, and the root's completion is the greedy
         # trajectory itself, so the result is never below greedy.
         self._rollout_steps = rollout_steps
+        # v0.1.10: greedy-completion objective ("rate" = score by final
+        # production; "node_time" applies the payback < T - t rule in the
+        # completions, matching the greedy default used for node times).
+        self._objective = objective
+        self._save_k = save_k
         # Cost is O(branch_steps * width^2) greedy completions, so branching
         # stops after ``branch_steps`` decisions; the best plan found so far
         # (prefix + greedy completion) is returned. Only for rank="rollout".
@@ -68,15 +80,18 @@ class BeamSearchOptimizer:
         cache: dict = {}
         best_plan = None  # (value, prefix purchases, rollout result, rollout engine)
 
-        def rollout(eng, prefix):
+        def rollout(eng, prefix, valuation=None):
             # Cache stores values only (memory); the plan objects are kept for
             # the incumbent alone.
             nonlocal best_plan
-            key = (eng.time, eng._state_fingerprint(), len(prefix))
+            key = (eng.time, eng._state_fingerprint(), len(prefix), valuation)
             v = cache.get(key)
             if v is not None:
                 return v
             g = GreedyOptimizer(eng._game, copy.deepcopy(eng.state))
+            g.objective = self._objective
+            if valuation is not None:
+                g.engine.valuation = valuation
             import warnings as _w
 
             with _w.catch_warnings():
@@ -89,7 +104,11 @@ class BeamSearchOptimizer:
             return v
 
         if self._rank == "rollout":
+            # v0.1.9 #4: root incumbent = better of the shadow-greedy (engine
+            # default) and legacy-greedy trajectories, so beam >= both.
             rollout(beam[0][0], [])
+            if beam[0][0].valuation != "legacy":
+                rollout(beam[0][0], [], valuation="legacy")
 
         for _step in range(max_steps):
             if self._rank == "rollout" and _step >= self._branch_steps:
@@ -116,7 +135,17 @@ class BeamSearchOptimizer:
                     continue
 
                 candidates.sort(key=lambda c: (-c["efficiency"], c["cost"]))
-                candidates = candidates[: self._beam_width]
+                top = candidates[: self._beam_width]
+                # v0.1.11 'save for X': also branch on reserving gold for the
+                # best save_k single-currency (non-material) items by payback
+                # that are not affordable yet; the wait below reserves for X.
+                if self._save_k:
+                    have = {c["node_id"] for c in top}
+                    saves = [c for c in candidates[self._beam_width:]
+                             if not c.get("multi") and c["node_id"] not in have
+                             and engine_state.get_balance(pay_resource) < c["cost"]][: self._save_k]
+                    top = top + saves
+                candidates = top
 
                 expanded_any = False
                 for candidate in candidates:

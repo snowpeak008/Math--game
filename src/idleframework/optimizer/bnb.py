@@ -171,6 +171,7 @@ class BranchAndBoundOptimizer:
             return
 
         greedy = GreedyOptimizer(engine._game, copy.deepcopy(engine.state))
+        greedy.objective = "rate"  # BnB maximises final production rate
         candidates = greedy.get_candidates()
         candidates = [c for c in candidates if c["efficiency"] > 0 and c.get("wait", 0.0) != float("inf")]
 
