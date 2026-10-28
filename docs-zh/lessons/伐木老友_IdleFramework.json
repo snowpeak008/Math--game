@@ -1,0 +1,212 @@
+{
+  "schema_version": "1.0",
+  "name": "FamuLaoYou_Pacing_v3_dense_1to2h",
+  "stacking_groups": {
+    "u": "multiplicative"
+  },
+  "nodes": [
+    {
+      "id": "gold",
+      "type": "resource",
+      "name": "Gold",
+      "initial_value": 65.0
+    },
+    {
+      "id": "g0",
+      "type": "generator",
+      "name": "HQ",
+      "base_production": 0.5833333333333334,
+      "cost_base": 1,
+      "cost_growth_rate": 1000000000.0,
+      "cycle_time": 1
+    },
+    {
+      "id": "unit_up",
+      "type": "generator",
+      "name": "UnitUpgrades",
+      "base_production": 0.25,
+      "cost_base": 40,
+      "cost_growth_rate": 1.5,
+      "cycle_time": 1
+    },
+    {
+      "id": "buy_electro",
+      "type": "generator",
+      "name": "电击法师",
+      "base_production": 14.357738095238089,
+      "cost_base": 225.0,
+      "cost_growth_rate": 1000000000.0,
+      "cycle_time": 1
+    },
+    {
+      "id": "buy_ballista",
+      "type": "generator",
+      "name": "弩炮",
+      "base_production": 5.617778023221361,
+      "cost_base": 600.0,
+      "cost_growth_rate": 1000000000.0,
+      "cycle_time": 1
+    },
+    {
+      "id": "buy_fire",
+      "type": "generator",
+      "name": "火焰法师",
+      "base_production": 7.5,
+      "cost_base": 850.0,
+      "cost_growth_rate": 1000000000.0,
+      "cycle_time": 1
+    },
+    {
+      "id": "buy_saw",
+      "type": "generator",
+      "name": "锯刃",
+      "base_production": 9.544645568580904,
+      "cost_base": 625.0,
+      "cost_growth_rate": 1000000000.0,
+      "cycle_time": 1
+    },
+    {
+      "id": "buy_wind",
+      "type": "generator",
+      "name": "风系法师",
+      "base_production": 9.915143181324728,
+      "cost_base": 900.0,
+      "cost_growth_rate": 1000000000.0,
+      "cycle_time": 1
+    },
+    {
+      "id": "buy_druid",
+      "type": "generator",
+      "name": "德鲁伊",
+      "base_production": 6.000675818104461,
+      "cost_base": 800.0,
+      "cost_growth_rate": 1000000000.0,
+      "cycle_time": 1
+    },
+    {
+      "id": "buy_cannon",
+      "type": "generator",
+      "name": "火炮",
+      "base_production": 10.833333333333334,
+      "cost_base": 1075.0,
+      "cost_growth_rate": 1000000000.0,
+      "cycle_time": 1
+    },
+    {
+      "id": "buy_catapult",
+      "type": "generator",
+      "name": "投石机",
+      "base_production": 10.211036944856112,
+      "cost_base": 2100.0,
+      "cost_growth_rate": 1000000000.0,
+      "cycle_time": 1
+    },
+    {
+      "id": "buy_arcane",
+      "type": "generator",
+      "name": "奥术法师",
+      "base_production": 2.1219295687573623,
+      "cost_base": 2450.0,
+      "cost_growth_rate": 1000000000.0,
+      "cycle_time": 1
+    },
+    {
+      "id": "buy_guild",
+      "type": "generator",
+      "name": "工程师公会",
+      "base_production": 14.166666666666666,
+      "cost_base": 6100.0,
+      "cost_growth_rate": 1000000000.0,
+      "cycle_time": 1
+    },
+    {
+      "id": "buy_temple",
+      "type": "generator",
+      "name": "原木神殿",
+      "base_production": 16.666666666666668,
+      "cost_base": 8200.0,
+      "cost_growth_rate": 1000000000.0,
+      "cycle_time": 1
+    }
+  ],
+  "edges": [
+    {
+      "id": "e0",
+      "source": "g0",
+      "target": "gold",
+      "edge_type": "production_target"
+    },
+    {
+      "id": "eu",
+      "source": "unit_up",
+      "target": "gold",
+      "edge_type": "production_target"
+    },
+    {
+      "id": "e1",
+      "source": "buy_electro",
+      "target": "gold",
+      "edge_type": "production_target"
+    },
+    {
+      "id": "e2",
+      "source": "buy_ballista",
+      "target": "gold",
+      "edge_type": "production_target"
+    },
+    {
+      "id": "e3",
+      "source": "buy_fire",
+      "target": "gold",
+      "edge_type": "production_target"
+    },
+    {
+      "id": "e4",
+      "source": "buy_saw",
+      "target": "gold",
+      "edge_type": "production_target"
+    },
+    {
+      "id": "e5",
+      "source": "buy_wind",
+      "target": "gold",
+      "edge_type": "production_target"
+    },
+    {
+      "id": "e6",
+      "source": "buy_druid",
+      "target": "gold",
+      "edge_type": "production_target"
+    },
+    {
+      "id": "e7",
+      "source": "buy_cannon",
+      "target": "gold",
+      "edge_type": "production_target"
+    },
+    {
+      "id": "e8",
+      "source": "buy_catapult",
+      "target": "gold",
+      "edge_type": "production_target"
+    },
+    {
+      "id": "e9",
+      "source": "buy_arcane",
+      "target": "gold",
+      "edge_type": "production_target"
+    },
+    {
+      "id": "e10",
+      "source": "buy_guild",
+      "target": "gold",
+      "edge_type": "production_target"
+    },
+    {
+      "id": "e11",
+      "source": "buy_temple",
+      "target": "gold",
+      "edge_type": "production_target"
+    }
+  ]
+}
